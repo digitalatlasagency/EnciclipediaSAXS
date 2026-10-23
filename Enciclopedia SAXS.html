@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enciclopedia SAXS</title>
+<style>
+  :root {
+    --bg: #ffffff; --panel: #f7f7f8; --line: #e6e6e9; --text: #1b1b1f; --muted: #6b6b75;
+    --accent: #1f4fd1; --accent-soft: #eaf0ff;
+    --ok: #1e7f4f; --ok-bg: #e7f6ee; --buy: #b42318; --buy-bg: #fdecea;
+    --less: #9a5b00; --less-bg: #fff4e0; --over: #5b3fb8; --over-bg: #f0ebff; --none: #6b6b75; --none-bg: #f0f0f2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding: 12px 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 18px; letter-spacing: .02em; white-space: nowrap; }
+  header h1 span { color: var(--muted); font-weight: 400; }
+  #q { flex: 1 1 260px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+  #q:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .stats { display: flex; gap: 18px; color: var(--muted); font-size: 13px; flex-wrap: wrap; }
+  .stats b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .btn { border: 1px solid var(--line); background: var(--bg); padding: 7px 11px; border-radius: 8px; font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--panel); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .layout { display: grid; grid-template-columns: 250px 1fr; }
+  aside { border-right: 1px solid var(--line); padding: 16px; position: sticky; top: var(--hh, 100px); height: calc(100vh - var(--hh, 100px)); overflow: auto; }
+  aside h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 6px; }
+  aside h3:first-child { margin-top: 0; }
+  .f { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; border: 0; background: none; padding: 5px 8px; border-radius: 6px; font: inherit; font-size: 13px; cursor: pointer; color: var(--text); }
+  .f:hover { background: var(--panel); }
+  .f.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .f small { color: var(--muted); font-variant-numeric: tabular-nums; }
+  label.chk { display: flex; gap: 8px; align-items: center; font-size: 13px; padding: 4px 8px; cursor: pointer; }
+  label.chk.sep, #disp.sep { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
+  /* Graduar stock */
+  #grad .gr-fila { display: flex; gap: 6px; align-items: end; margin-bottom: 6px; padding: 0 2px; }
+  #grad .gr-fila label { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--muted); flex: 1; min-width: 0; }
+  #grad input { width: 100%; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 13px; background: var(--bg); color: var(--text); }
+  #grad input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  #grad .gr-fila > span { font-size: 12px; color: var(--muted); padding-bottom: 7px; }
+  #grad .chip { font-size: 11.5px; padding: 3px 8px; }
+  /* Árbol de categorías / subcategorías */
+  .ct { display: grid; grid-template-columns: 1fr auto; align-items: center; }
+  .ct > label, .cs label { display: flex; gap: 7px; align-items: center; font-size: 13px; padding: 4px 6px; border-radius: 6px; cursor: pointer; min-width: 0; }
+  .ct > label:hover, .cs label:hover { background: var(--panel); }
+  .ct > label span, .cs label span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ct > label small, .cs label small { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ct > label.on span { color: var(--accent); font-weight: 600; }
+  .ct .abre { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+  .ct .abre:hover { background: var(--panel); color: var(--text); }
+  .cs { grid-column: 1 / -1; margin: 0 0 4px 14px; padding-left: 8px; border-left: 2px solid var(--line); }
+  .cs label { font-size: 12.5px; padding: 3px 6px; }
+  .cs .todo { font-size: 11px; color: var(--muted); padding: 2px 6px; }
+  .cero { opacity: .45; }
+  .body .pr { font-size: 12px; color: var(--text); font-variant-numeric: tabular-nums; }
+  .tbl th.ord { cursor: pointer; user-select: none; }
+  .tbl th.ord:hover { color: var(--text); background: var(--line); }
+  .tbl th.ord.on { color: var(--accent); }
+  .tbl .mini-img { width: 34px; height: 34px; border-radius: 5px; object-fit: cover; background: var(--panel); display: block; }
+  select { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 13px; background: var(--bg); }
+  main { padding: 16px 20px 60px; min-width: 0; }
+  .sec h2 { font-size: 15px; margin: 22px 0 10px; display: flex; gap: 10px; align-items: baseline; }
+  .sec h2 small { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .sec:first-child h2 { margin-top: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer; background: var(--bg); transition: box-shadow .15s, border-color .15s; display: flex; flex-direction: column; }
+  .card:hover { border-color: #c9c9d0; box-shadow: 0 4px 14px rgba(0,0,0,.07); }
+  .ph { aspect-ratio: 1; background: var(--panel); position: relative; }
+  .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ph .noimg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--muted); font-size: 12px; padding: 10px; }
+  .ph .noimg b { display: block; font-size: 22px; color: #b9b9c2; letter-spacing: .05em; }
+  .ph .tag { position: absolute; left: 6px; bottom: 6px; background: rgba(255,255,255,.92); border: 1px solid var(--line); font-size: 10px; padding: 1px 6px; border-radius: 4px; color: var(--muted); }
+  .ph .sig { position: absolute; right: 6px; top: 6px; }
+  .body { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .body .a { font-weight: 650; font-size: 13px; }
+  .body .c { font-size: 13px; color: var(--text); }
+  .body .s { font-size: 11px; color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+  .body .st { margin-top: auto; padding-top: 6px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted); }
+  .body .st b { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+  .body .st b.zero { color: var(--buy); }
+  .pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; letter-spacing: .03em; white-space: nowrap; }
+  .p-COMPRAR { color: var(--buy); background: var(--buy-bg); }
+  .p-OK { color: var(--ok); background: var(--ok-bg); }
+  .p-PEDIR { color: var(--less); background: var(--less-bg); }
+  .p-SOBRESTOCK { color: var(--over); background: var(--over-bg); }
+  .p-SIN { color: var(--none); background: var(--none-bg); }
+  .edited { color: var(--accent); font-size: 11px; }
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+  .body .ve { font-size: 10.5px; color: var(--muted); line-height: 1.35; margin-top: 4px; }
+  .body .ve span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .p-SALDO { color: #8a4b00; background: #ffe9c7; }
+  .ph .saldo { position: absolute; left: 34px; top: 6px; }
+  /* Selección de productos */
+  .ph .selbox { position: absolute; left: 6px; top: 6px; z-index: 2; width: 24px; height: 24px; display: grid; place-items: center; background: rgba(255,255,255,.94); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+  .ph .selbox input, .selcol input { margin: 0; width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
+  .card.elegida { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .tbl tr.elegida td { background: var(--accent-soft); }
+  .tbl .selcol { width: 28px; text-align: center; }
+  /* Encabezado: el buscador y los totales ceden lugar para que "Selección" quede arriba a la derecha */
+  header #q { flex: 1 1 200px; }
+  header .stats { flex: 1 1 260px; min-width: 0; gap: 4px 14px; }
+  .sel-btn { margin-left: auto; }
+  .sel-btn b { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 99px; background: var(--panel); font-variant-numeric: tabular-nums; }
+  .sel-btn.con b { background: var(--accent); color: #fff; }
+  #selp { position: fixed; top: 0; right: 0; bottom: 0; width: min(820px, 100vw); background: var(--bg); z-index: 12; overflow: auto; box-shadow: -10px 0 30px rgba(0,0,0,.14); transform: translateX(100%); transition: transform .2s; }
+  #selp.open { transform: none; }
+  #selp .sh { position: sticky; top: 0; z-index: 1; background: var(--bg); border-bottom: 1px solid var(--line); padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: end; justify-content: space-between; }
+  #selp .sh h2 { margin: 0; font-size: 17px; flex-basis: 100%; display: flex; justify-content: space-between; align-items: center; }
+  #selp .sh h2 small { color: var(--muted); font-weight: 400; font-size: 13px; }
+  #selp .sb { padding: 14px 18px 40px; }
+  #selp .acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sl-row { display: grid; grid-template-columns: 22px 44px 1fr auto auto 28px; gap: 10px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .sl-row .n { color: var(--muted); font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }
+  .sl-row img, .sl-row .mini-img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; background: var(--panel); display: block; }
+  .sl-row .t { min-width: 0; cursor: pointer; }
+  .sl-row .t small { display: block; color: var(--muted); font-size: 11.5px; }
+  .sl-row .v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sl-row .v small { display: block; color: var(--muted); font-size: 11px; }
+  .quita { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; padding: 4px; border-radius: 4px; }
+  .quita:hover { color: var(--buy); background: var(--buy-bg); }
+  .sl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .sl-card { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; position: relative; font-size: 12.5px; }
+  .sl-card .ph { aspect-ratio: 1; cursor: pointer; }
+  .sl-card .bd { padding: 6px 8px 8px; }
+  .sl-card .bd small { color: var(--muted); display: block; }
+  .sl-card .quita { position: absolute; right: 4px; top: 4px; background: rgba(255,255,255,.92); }
+  .sl-card .num { position: absolute; left: 6px; top: 6px; background: rgba(255,255,255,.92); border-radius: 99px; padding: 0 7px; font-size: 11px; font-weight: 600; }
+
+  /* Pestañas */
+  #tabs { flex-basis: 100%; display: flex; gap: 4px; overflow-x: auto; margin: 0 -4px -12px; }
+  #tabs button { border: 0; background: none; font: inherit; font-size: 13.5px; padding: 8px 12px 10px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
+  #tabs button:hover { color: var(--text); }
+  #tabs button.on { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  #tabs small { font-variant-numeric: tabular-nums; margin-left: 4px; }
+  .layout.full { grid-template-columns: 1fr; }
+  .layout.full aside { display: none; }
+  .intro { color: var(--muted); font-size: 13px; margin: 2px 0 14px; }
+
+  /* Artículos agrupados dentro de cada categoría */
+  .art { margin: 0 0 18px; }
+  .art h3 { font-size: 13.5px; margin: 0 0 8px; padding-top: 10px; border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .art h3 small { color: var(--muted); font-weight: 400; font-size: 12px; }
+
+  /* Barra de herramientas de las vistas de inspección */
+  .bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
+  .bar label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+  .bar select { width: auto; min-width: 180px; }
+
+  /* Tabla de stock bajo */
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 8px 10px; background: var(--panel); position: sticky; top: 0; white-space: nowrap; }
+  .tbl td { padding: 7px 10px; border-top: 1px solid var(--line); vertical-align: middle; }
+  .tbl tr[data-i] { cursor: pointer; }
+  .tbl tr[data-i]:hover td { background: var(--panel); }
+  .tbl .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tbl .mini { display: inline-block; width: 60px; height: 6px; background: var(--panel); border-radius: 3px; vertical-align: middle; margin-left: 6px; overflow: hidden; }
+  .tbl .mini i { display: block; height: 100%; background: var(--accent); border-radius: 0 3px 3px 0; }
+  .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+  .sw.x { background: repeating-linear-gradient(45deg, #fff 0 2px, #d6d6dc 2px 4px); }
+
+  /* Ventas del mes */
+  .kpis.v { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 16px; }
+  .rk { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 22px; }
+  .rk > div { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .rk h3 { font-size: 13px; margin: 0 0 8px; }
+  .rk ol { margin: 0; padding: 0; list-style: none; counter-reset: r; }
+  .rk li { counter-increment: r; display: grid; grid-template-columns: 18px 1fr auto; gap: 6px; align-items: baseline; padding: 4px 0; font-size: 13px; cursor: pointer; border-radius: 4px; }
+  .rk li:hover { background: var(--panel); }
+  .rk li::before { content: counter(r); color: var(--muted); font-size: 12px; text-align: right; }
+  .rk li b { font-variant-numeric: tabular-nums; }
+  .rk li em { font-style: normal; color: var(--muted); font-size: 12px; }
+  .chart h3 { font-size: 14px; margin: 0 0 2px; }
+  .chart .grp { padding: 10px 0 6px; border-top: 1px solid var(--line); }
+  .chart .gh { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 650; margin-bottom: 4px; }
+  .chart .gh small { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+  .chart .row { display: grid; grid-template-columns: minmax(110px, 190px) 1fr 70px; gap: 10px; align-items: center; padding: 3px 0; cursor: pointer; border-radius: 4px; }
+  .chart .row:hover { background: var(--panel); }
+  .chart .lb { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chart .tr { height: 14px; }
+  .chart .tr i { display: block; height: 100%; min-width: 2px; background: var(--accent); border-radius: 0 4px 4px 0; }
+  .chart .row:hover .tr i { background: #163ba3; }
+  .chart .vl { font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  /* Chips (filtro de saldos, aptos, colores, "ideal para") */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .chip { border: 1px solid var(--line); background: var(--bg); border-radius: 99px; padding: 4px 10px; font: inherit; font-size: 12.5px; cursor: pointer; color: var(--text); white-space: nowrap; }
+  .chip:hover { background: var(--panel); }
+  .chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .chip small { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 3px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; padding: 2px 8px; border-radius: 99px; background: var(--panel); color: var(--text); white-space: nowrap; }
+  .tag.off { opacity: .45; }
+  .tag button { border: 0; background: none; padding: 0 0 0 2px; cursor: pointer; color: var(--muted); font-size: 13px; line-height: 1; }
+  .tag button:hover { color: var(--buy); }
+  .tags { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  /* Vistas con filtros propios (Técnica, Inspiración, Combinaciones) */
+  .dos { display: grid; grid-template-columns: 230px 1fr; gap: 20px; align-items: start; }
+  .facetas { position: sticky; top: calc(var(--hh, 100px) + 10px); max-height: calc(100vh - var(--hh, 100px) - 20px); overflow: auto; padding-right: 4px; }
+  .facetas details { border-bottom: 1px solid var(--line); padding: 6px 0; }
+  .facetas summary { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; cursor: pointer; padding: 4px 0; list-style-position: inside; }
+  .facetas summary b { color: var(--accent); }
+  .facetas label { display: flex; gap: 6px; align-items: center; font-size: 12.5px; padding: 2px 0; cursor: pointer; }
+  .facetas label span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .facetas label small { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .facetas label.cero { opacity: .4; }
+  .facetas .fg { display: grid; grid-template-columns: 1fr auto; align-items: center; }
+  .facetas .fg .fgv { grid-column: 1 / -1; padding-left: 20px; border-left: 2px solid var(--line); margin: 2px 0 4px 6px; }
+  .facetas .abre { border: 0; background: none; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; padding: 2px 4px; border-radius: 4px; white-space: nowrap; }
+  .facetas .abre:hover { background: var(--panel); color: var(--text); }
+  .facetas .sw { margin-right: 0; flex: none; }
+  /* Filtro de color dentro del panel izquierdo (Catálogo y Saldos) */
+  #side .facetas { position: static; max-height: none; overflow: visible; padding: 0 2px 0 8px; margin-top: 12px; }
+  #side .facetas details { border: 0; padding: 0; }
+  #side .facetas summary { font-size: 11px; letter-spacing: .08em; margin: 6px 0 4px; }
+  #side .facetas p { margin: 6px 0 0; }
+  .grupo h2 { font-size: 15px; margin: 18px 0 10px; display: flex; gap: 10px; align-items: baseline; }
+  .grupo:first-child h2 { margin-top: 0; }
+  .grupo h2 small { color: var(--muted); font-weight: 400; font-size: 12px; }
+
+  /* Ficha técnica por artículo */
+  .tec { display: grid; grid-template-columns: 96px 1fr; gap: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; cursor: pointer; }
+  .tec:hover { border-color: #c9c9d0; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+  .tec .ph { border-radius: 8px; overflow: hidden; }
+  .tec h3 { margin: 0 0 2px; font-size: 14.5px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .tec h3 small { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .tec dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; margin: 8px 0; }
+  .tec dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .tec dd { margin: 0; font-size: 13px; }
+  .tec .fila { display: flex; gap: 8px; align-items: baseline; margin-top: 6px; font-size: 12px; }
+  .tec .fila > b { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; min-width: 64px; }
+  .rot { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+  .rot-3 { color: var(--ok); background: var(--ok-bg); }
+  .rot-2 { color: var(--less); background: var(--less-bg); }
+  .rot-1 { color: var(--over); background: var(--over-bg); }
+  .rot-0 { color: var(--none); background: var(--none-bg); }
+  .est { font-size: 10.5px; color: var(--muted); font-style: italic; }
+
+  /* Inspiración */
+  .ins { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+  .insp { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  .insp .ph { aspect-ratio: 16 / 9; cursor: pointer; }
+  .insp .bd { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .insp h3 { margin: 0; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .insp h3 small { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .insp .tx { font-size: 12.5px; color: var(--text); }
+  .insp .lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 3px; }
+  .insp .add { display: flex; gap: 6px; margin-top: 6px; }
+  .insp .add input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12.5px; }
+  .insp .add input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+
+  /* Combinaciones y reemplazos */
+  .lista { border: 1px solid var(--line); border-radius: 10px; overflow: auto; max-height: calc(100vh - var(--hh, 100px) - 40px); position: sticky; top: calc(var(--hh, 100px) + 10px); }
+  .lista button { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: var(--bg); padding: 7px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
+  .lista button:hover { background: var(--panel); }
+  .lista button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .lista button small { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .sel { display: grid; grid-template-columns: 150px 1fr; gap: 16px; border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 18px; }
+  .sel .ph { border-radius: 8px; overflow: hidden; }
+  .sel h2 { margin: 0 0 2px; font-size: 19px; }
+  .sug h3 { font-size: 14px; margin: 20px 0 4px; }
+  .sug .intro { margin-bottom: 8px; }
+  .sug .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .card .por { font-size: 10.5px; color: var(--accent); line-height: 1.3; margin-top: 3px; }
+  @media (max-width: 860px) {
+    .dos { grid-template-columns: 1fr; }
+    .facetas, .lista { position: static; max-height: 260px; }
+    .tec, .sel { grid-template-columns: 72px 1fr; }
+  }
+
+  /* Ventas del mes: gráfico vertical con todas las ventas */
+  .vchart { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 10px; margin-bottom: 18px; }
+  .vchart h3 { font-size: 14px; margin: 0 0 2px; }
+  .vplot { --alto: 230px; --lab: 52px; position: relative; padding-left: 44px; }
+  .vg { position: absolute; left: 44px; right: 0; border-top: 1px dashed var(--line); pointer-events: none; }
+  .vg span { position: absolute; left: -44px; top: -8px; width: 38px; text-align: right; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .vbars { display: flex; align-items: stretch; border-bottom: 1px solid #c9c9d0; position: relative; overflow: hidden; }
+  /* La cola de columnas finitas se reparte el espacio que dejan los destacados (pueden quedar de menos de 1 px) */
+  .vb { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; cursor: pointer; }
+  .vb.d { flex: 0 0 76px; margin: 0 2px; }
+  .vb .va { height: var(--alto); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+  .vb .va i { display: block; width: 100%; min-height: 1px; background: #c9cdd6; border-radius: 3px 3px 0 0; }
+  .vb.d .va i { background: var(--accent); }
+  .vb:hover .va i { background: #8e95a3; }
+  .vb.d:hover .va i { background: #163ba3; }
+  .vb .vv { font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; margin-bottom: 2px; }
+  .vb .vl2 { height: var(--lab); padding-top: 4px; font-size: 10.5px; line-height: 1.2; text-align: center; overflow: hidden; color: var(--muted); }
+  .vb .vl2 b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--text); word-break: break-word; }
+  .vb .vl2 .sw { width: 8px; height: 8px; margin-right: 3px; }
+  .vb .vl2 .vc { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 860px) { .vplot { --alto: 180px; overflow-x: auto; } .vbars { min-width: 1100px; } .vg { width: 1100px; right: auto; } }
+
+  #tip { position: fixed; z-index: 30; pointer-events: none; background: var(--bg); border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(0,0,0,.12); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; display: none; max-width: 260px; }
+  #tip b { font-variant-numeric: tabular-nums; }
+  #tip div { color: var(--muted); }
+
+  /* Ficha */
+  #ov { position: fixed; inset: 0; background: rgba(20,20,30,.35); z-index: 10; display: none; }
+  #ov.open { display: block; }
+  #det { position: fixed; top: 0; right: 0; bottom: 0; width: min(920px, 100vw); background: var(--bg); z-index: 11; overflow: auto; box-shadow: -10px 0 30px rgba(0,0,0,.12); transform: translateX(100%); transition: transform .2s; }
+  #det.open { transform: none; }
+  .dh { position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--line); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; z-index: 1; }
+  .dh .crumb { color: var(--muted); font-size: 12px; }
+  .db { padding: 20px; display: grid; grid-template-columns: 340px 1fr; gap: 24px; }
+  .big { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--panel); position: relative; border: 1px solid var(--line); }
+  .big img { width: 100%; height: 100%; object-fit: cover; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .colors { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .colors button { width: 52px; border: 1px solid var(--line); border-radius: 6px; padding: 0; background: var(--panel); cursor: pointer; overflow: hidden; text-align: center; font-size: 9px; color: var(--muted); }
+  .colors button.on { outline: 2px solid var(--accent); }
+  .colors img, .colors .sw { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .colors .sw { display: grid; place-items: center; font-size: 10px; }
+  .colors span { display: block; padding: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  h2.t { margin: 0 0 2px; font-size: 22px; }
+  .sub { color: var(--muted); margin-bottom: 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+  .kpi { background: var(--panel); border-radius: 8px; padding: 8px 10px; }
+  .kpi small { display: block; color: var(--muted); font-size: 11px; }
+  .kpi b { font-size: 17px; font-variant-numeric: tabular-nums; }
+  .ana { font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); margin-bottom: 18px; }
+  .fld { margin-bottom: 14px; }
+  .fld label { display: flex; justify-content: space-between; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .fld textarea, .fld input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13.5px; resize: vertical; background: var(--bg); color: var(--text); }
+  .fld textarea:focus, .fld input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .web { background: var(--panel); border-radius: 8px; padding: 12px 14px; font-size: 13px; margin-bottom: 18px; }
+  .web ul { margin: 6px 0 0; padding-left: 18px; }
+  .web a { color: var(--accent); }
+  .hint { font-size: 12px; color: var(--muted); }
+  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #1b1b1f; color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; z-index: 20; pointer-events: none; }
+  #toast.show { opacity: 1; }
+  #menuBtn { display: none; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { display: none; position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+    aside.open { display: block; }
+    #menuBtn { display: inline-block; }
+    .db { grid-template-columns: 1fr; }
+    header { padding: 10px 16px; }
+    main { padding: 12px 16px 60px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>SAXS <span>· Enciclopedia de stock</span></h1>
+  <button class="btn" id="menuBtn">Filtros</button>
+  <input id="q" type="search" placeholder="Buscar artículo, color, SKU, uso, cliente…">
+  <div class="stats" id="stats"></div>
+  <button class="btn primary" id="save" title="Descarga enriquecimiento.js con todas las fichas editadas">Guardar fichas</button>
+  <button class="btn" id="csv" title="Exporta lo que se ve en pantalla a CSV (abre en Excel)">Exportar CSV</button>
+  <button class="btn sel-btn" id="selBtn" title="Ver y descargar los productos seleccionados">Selección <b id="selN">0</b></button>
+  <nav id="tabs"></nav>
+</header>
+<div class="layout" id="layout">
+  <aside id="side">
+    <h3>Vista</h3>
+    <div id="modos">
+      <label class="chk"><input type="radio" name="modo" value="filas"> Fila por producto</label>
+      <label class="chk"><input type="radio" name="modo" value="cards"> Artículos por color</label>
+      <label class="chk"><input type="radio" name="modo" value="lista"> Listado</label>
+      <label class="chk"><input type="radio" name="modo" value="detalle"> Detalle</label>
+    </div>
+    <div id="disp" class="sep">
+      <label class="chk"><input type="radio" name="disp" value="todo"> Todos los productos</label>
+      <label class="chk"><input type="radio" name="disp" value="stock"> Solo con stock</label>
+      <label class="chk"><input type="radio" name="disp" value="stockped"> Solo con stock + pedidos hechos</label>
+      <label class="chk"><input type="radio" name="disp" value="ped"> Solo pedidos hechos</label>
+    </div>
+    <label class="chk"><input type="checkbox" id="onlyEdited"> Solo fichas editadas</label>
+    <h3>Graduar stock</h3>
+    <div id="grad">
+      <div class="gr-fila"><select id="gsobre" title="Qué cantidad se gradúa"><option value="stock">Stock</option><option value="total">Disponible c/pedidos</option></select></div>
+      <div class="gr-fila"><label>Desde<input type="number" id="gmin" min="0" step="50" placeholder="0" inputmode="numeric"></label><label>Hasta<input type="number" id="gmax" min="0" step="50" placeholder="sin tope" inputmode="numeric"></label><span>m</span></div>
+      <div class="chips gr-chips"></div>
+    </div>
+    <h3>Ordenar</h3>
+    <select id="sort">
+      <option value="nombre">Alfabético</option>
+      <option value="precioDesc">De mayor a menor precio</option>
+      <option value="precioAsc">De menor a mayor precio</option>
+      <option value="stock">Mayor stock</option>
+      <option value="stockAsc">Menor stock</option>
+      <option value="total">Mayor disponible total</option>
+      <option value="ventaMes">Mayor venta en el último mes</option>
+      <option value="cob">Menor cobertura</option>
+    </select>
+    <h3>Señal de compra</h3>
+    <div id="sigs"></div>
+    <h3>Categoría (menú web)</h3>
+    <div id="cats"></div>
+    <div id="colores"></div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div id="ov"></div>
+<section id="det" aria-modal="true" role="dialog"></section>
+<section id="selp" role="dialog" aria-label="Selección"></section>
+<div id="toast"></div>
+<div id="tip"></div>
+
+<script src="datos.js"></script>
+<script src="enriquecimiento.js"></script>
+<script>
+const ITEMS = window.SAXS_ITEMS, FAM = window.SAXS_FAMILIAS;
+const LS = 'saxs-enriq-v1';
+const CAMPOS = [
+  ['tipo', 'Qué es', 1],
+  ['tecnica', 'Cómo es técnicamente', 3],
+  ['usos', 'Para qué se usa', 2],
+  ['cliente', 'Tipo de cliente', 2],
+  ['aplicacion', 'Productos donde se aplica', 2],
+  ['notas', 'Notas comerciales / argumentos de venta', 3]
+];
+const fmt = n => (n || 0).toLocaleString('es-AR', { maximumFractionDigits: 0 });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const artKey = it => norm(it.art).replace(/\s+/g, ' ').trim();
+const sigClass = s => 'p-' + (s || 'SIN').split(' ')[0];
+const toast = m => { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200); };
+
+// Fichas: base del archivo enriquecimiento.js + cambios locales más recientes (por artículo, aplica a todos sus colores)
+let ENR = Object.assign({}, window.SAXS_ENRIQ || {});
+try {
+  const loc = JSON.parse(localStorage.getItem(LS) || '{}');
+  for (const k in loc) if (!ENR[k] || (loc[k].t || 0) > (ENR[k].t || 0)) ENR[k] = loc[k];
+} catch (e) {}
+const persist = () => { try { localStorage.setItem(LS, JSON.stringify(ENR)); } catch (e) {} };
+
+function ficha(it) {
+  const f = FAM[it.fam] || {}, e = ENR[artKey(it)] || {};
+  const base = {
+    tipo: f.familia || '',
+    tecnica: [f.tecnica, it.web && it.web.detalles.length ? 'Según la web: ' + it.web.detalles.join(' · ') + '.' : ''].filter(Boolean).join('\n'),
+    usos: f.usos || '', cliente: f.cliente || '', aplicacion: f.aplicacion || '', notas: ''
+  };
+  const out = {};
+  for (const [k] of CAMPOS) out[k] = e[k] ?? base[k];
+  out._editado = !!e.t;
+  return out;
+}
+
+// Estado
+const MESES = window.SAXS_MESES || [];
+const SALDO = 200, BAJO = 800;
+const st = { q: '', cats: {}, sig: '', modo: 'cards', disp: 'stock', gsobre: 'stock', gmin: null, gmax: null, onlyEdited: false, sort: 'nombre', vista: 'cat', tipo: '', color: '', mes: MESES.length - 1, vcat: '', tecF: {}, tecG: 'tex', insF: {}, combo: '' };
+try { Object.assign(st, JSON.parse(localStorage.getItem('saxs-vista') || '{}'), { q: '' }); } catch (e) {}
+delete st.saldoTipos; delete st.bajoF;
+// Catálogo, Saldos y Stock bajo comparten el panel izquierdo, pero cada pestaña guarda su propia selección.
+// Los campos del panel viven en st mientras la pestaña está activa y se guardan en st.panel[pestaña] al salir.
+const PANEL = ['cats', 'sig', 'modo', 'disp', 'gsobre', 'gmin', 'gmax', 'onlyEdited', 'sort', 'catF', 'lcol'];
+const PESTANAS_PANEL = ['cat', 'saldos', 'bajo'];
+let panelActivo = null;
+const guardaPanel = () => { if (panelActivo) st.panel[panelActivo] = Object.fromEntries(PANEL.map(k => [k, st[k]])); };
+const saveView = () => { guardaPanel(); try { localStorage.setItem('saxs-vista', JSON.stringify(st)); } catch (e) {} };
+
+// Categorías = menú principal de saxs.com.ar, en su orden
+const CATS = (window.SAXS_MENU || []).filter(c => ITEMS.some(i => i.menu === c));
+const SIGS = ['COMPRAR', 'PEDIR MENOS', 'OK', 'SOBRESTOCK', 'SIN VENTAS'];
+const TIPOS = [...new Set(ITEMS.map(i => i.cat))].sort((a, b) => a.localeCompare(b, 'es'));
+// Color base: primera palabra del color sin aclaraciones (SUELA OSCURO D/T → SUELA)
+// Se saltean palabras que nombran el diseño y no el color (TELA DE CAMBRE NEGRO → NEGRO, HELIOS PLATA → PLATA)
+const NO_COLOR = new Set(['TELA', 'DE', 'CAMBRE', 'NILO', 'HELIOS', 'KRONOS', 'LASER', 'LIGERA', 'CAJA', 'UNIDADES']);
+const ALIAS_COLOR = { NEGRA: 'NEGRO', FUCCIA: 'FUCIA', ROSE: 'ROSE GOLD', TURQUESA: 'TURQUEZA', MOCA: 'MOCCA' };
+const colorBase = it => {
+  const w = norm(it.color).toUpperCase().replace(/\(.*?\)|\bD\/T\b|\bDT\b|\bBK\b|\bNUEVO COLOR\b|\d+/g, ' ').replace(/[^A-Z ]/g, ' ').trim().split(/\s+/).filter(x => x && !NO_COLOR.has(x));
+  return ALIAS_COLOR[w[0]] || w[0] || 'SIN COLOR';
+};
+const COLORES = [...new Set(ITEMS.map(colorBase))].sort((a, b) => a.localeCompare(b, 'es'));
+// Familias de color para filtrar por grupo (marrones, grises, rojos…). Lo que no está listado cae en "Otros".
+const FAM_COLOR = [
+  ['Negros', '#1b1b1b', ['NEGRO']],
+  ['Blancos y crudos', '#f4f1ea', ['BLANCO', 'HUESO', 'MANTECA', 'NATURAL', 'TIZA', 'CRUDO']],
+  ['Beiges y nudes', '#d9bf9f', ['BEIGE', 'NUDE', 'ALMENDRA', 'ARENA', 'CORCHO']],
+  ['Marrones', '#7a4a2a', ['CHOCOLATE', 'MARRON', 'SUELA', 'CAMEL', 'CARAMELO', 'HABANO', 'MIEL', 'MOCCA', 'TOPO', 'VISON', 'MADERA', 'COGNAC']],
+  ['Grises', '#8e8e93', ['GRIS', 'PLOMO']],
+  ['Rojos y bordós', '#b3261e', ['ROJO', 'BORDO', 'TOMATE']],
+  ['Rosas y fucsias', '#e05a9a', ['ROSA', 'FUCIA', 'CHICLE']],
+  ['Naranjas y terracotas', '#e0702a', ['NARANJA', 'CORAL', 'TERRA']],
+  ['Amarillos', '#f2c94c', ['AMARILLO', 'MAIZ', 'OCRE', 'MOSTAZA']],
+  ['Verdes', '#2e7d32', ['VERDE', 'OLIVA', 'MANZANA', 'LIMA', 'MILITAR']],
+  ['Azules y celestes', '#1f4fa0', ['AZUL', 'CELESTE', 'TURQUEZA', 'JEAN', 'MARINO']],
+  ['Violetas y lilas', '#8e6bbf', ['LILA', 'LAVANDA', 'VIOLETA', 'UVA']],
+  ['Metalizados', '#b8b8bd', ['PLATA', 'ORO', 'PELTRE', 'PLATINO', 'ROSE GOLD', 'TORNASOL', 'PERLA', 'DORADO', 'COBRE', 'BRONCE']],
+  ['Animal print y estampados', '#a0612b', ['LEOPARDO', 'CROCO', 'CHITA', 'JAGUAR', 'VACA', 'PRINT', 'MULTI']],
+  ['Flúor y neón', '#c6ff00', ['FLUO', 'NEON']]
+];
+const FAM_DE_COLOR = Object.fromEntries(FAM_COLOR.flatMap(([f, , cs]) => cs.map(c => [c, f])));
+const famColor = c => FAM_DE_COLOR[c] || 'Otros';
+const ORDEN_FAM = [...FAM_COLOR.map(f => f[0]), 'Otros'];
+const swFam = f => (FAM_COLOR.find(x => x[0] === f) || [])[1];
+const esSaldo = it => it.stock > 0 && it.stock < SALDO;
+// Una vista guardada puede apuntar a valores que ya no existen tras regenerar datos.js: sin botón para quitarlos, la lista queda vacía
+if (!CATS.includes(st.vcat)) st.vcat = '';
+// Categorías elegidas: { CATEGORÍA: [] } = toda la categoría; { CATEGORÍA: ['Sub', …] } = solo esas subcategorías
+const SUBS = window.SAXS_SUBS || {};
+const coloresDeFamilias = fs => COLORES.filter(c => fs.includes(famColor(c)));
+// Panel de cada pestaña: lo guardado (validado) y, al abrir la página, siempre "Artículos por color" y "Solo con stock";
+// Stock bajo arranca además con negros, marrones y blancos
+function validaPanel(p, v) {
+  p = Object.assign({ cats: {}, sig: '', modo: 'cards', disp: 'stock', gsobre: 'stock', gmin: null, gmax: null, onlyEdited: false, sort: 'nombre', catF: {}, lcol: null }, p || {});
+  delete p.onlyStock;
+  if (!['stock', 'total'].includes(p.gsobre)) p.gsobre = 'stock';
+  for (const k of ['gmin', 'gmax']) if (!(typeof p[k] === 'number' && p[k] >= 0)) p[k] = null;
+  if (!p.cats || typeof p.cats !== 'object' || Array.isArray(p.cats)) p.cats = {};
+  for (const c in p.cats) { if (!CATS.includes(c)) delete p.cats[c]; else p.cats[c] = (p.cats[c] || []).filter(s => (SUBS[c] || []).concat('Otros').includes(s)); }
+  if (!SIGS.includes(p.sig)) p.sig = '';
+  if (!['nombre', 'precioDesc', 'precioAsc', 'stock', 'stockAsc', 'total', 'ventaMes', 'cob'].includes(p.sort)) p.sort = 'nombre';
+  // Orden con el que abre cada pestaña: Saldos por mayor stock, Stock bajo por mayor venta del último mes (el Catálogo recuerda el último)
+  if (v === 'saldos') { p.sort = 'stock'; p.lcol = null; }
+  if (v === 'bajo') { p.sort = 'ventaMes'; p.lcol = null; }
+  if (!p.catF || typeof p.catF !== 'object' || Array.isArray(p.catF)) p.catF = {};
+  p.modo = 'cards'; p.disp = 'stock';
+  if (v === 'bajo') p.catF = Object.assign({}, p.catF, { color: coloresDeFamilias(['Negros', 'Marrones', 'Blancos y crudos']) });
+  return p;
+}
+// Lo guardado antes de tener paneles por pestaña (campos sueltos en st) pasa a ser el del Catálogo
+const viejo = Object.fromEntries(PANEL.filter(k => k in st).map(k => [k, st[k]]));
+st.panel = Object.fromEntries(PESTANAS_PANEL.map(v => [v, validaPanel((st.panel || {})[v] || (v === 'cat' ? viejo : null), v)]));
+delete st.cat; delete st.fam; delete st.group;
+function usaPanel(v) {
+  if (!PESTANAS_PANEL.includes(v) || v === panelActivo) return;
+  guardaPanel();
+  Object.assign(st, st.panel[v]);
+  panelActivo = v;
+}
+usaPanel(PESTANAS_PANEL.includes(st.vista) ? st.vista : 'cat');
+const abiertosCat = new Set(Object.keys(st.cats));
+if (!TIPOS.includes(st.tipo)) st.tipo = '';
+delete st.color; delete st.tipo;
+if (!['cat', 'saldos', 'bajo', 'ventas', 'tecnica', 'inspira', 'combo'].includes(st.vista)) st.vista = 'cat';
+for (const k of ['tecF', 'insF', 'catF']) if (!st[k] || typeof st[k] !== 'object' || Array.isArray(st[k])) st[k] = {};
+if (!ITEMS.some(i => i.sku === st.combo)) st.combo = '';
+
+// --- Artículos (agrupan sus colores): base de las vistas Técnica, Inspiración y Combinaciones ---
+const TEX = window.SAXS_TEXTURAS || {};
+const ULT = MESES.length - 1;
+const ARTS = (() => {
+  const g = {};
+  ITEMS.forEach(i => (g[artKey(i)] = g[artKey(i)] || []).push(i));
+  return Object.entries(g).map(([key, items]) => ({
+    key, items, art: items[0].art, tec: items[0].tec || {}, menu: items[0].menu, cat: items[0].cat, fam: items[0].fam,
+    foto: items.find(i => i.imgTipo !== 'sin' && i.stock > 0) || items.find(i => i.imgTipo !== 'sin') || items[0],
+    stock: items.reduce((a, i) => a + i.stock, 0),
+    vUlt: items.reduce((a, i) => a + (i.ventas ? i.ventas[ULT] : 0), 0)
+  })).sort((a, b) => a.art.localeCompare(b.art, 'es'));
+})();
+const ART = Object.fromEntries(ARTS.map(a => [a.key, a]));
+// Rotación del último mes: los artículos que vendieron se parten en tercios (más, medio, poco pedidos)
+const ROT = ['Sin ventas en el último mes', 'Poco pedido', 'Rotación media', 'Más pedido'];
+(() => {
+  const v = ARTS.filter(a => a.vUlt > 0).sort((a, b) => b.vUlt - a.vUlt);
+  ARTS.forEach(a => a.rot = 0);
+  v.forEach((a, k) => a.rot = k < v.length / 3 ? 3 : k < v.length * 2 / 3 ? 2 : 1);
+})();
+const rotPill = a => `<span class="rot rot-${a.rot}" title="${esc(MESES[ULT] || '')}: ${fmt(a.vUlt)} m">${ROT[a.rot]}</span>`;
+const lindoV = s => s ? s.charAt(0) + s.slice(1).toLowerCase() : s;
+const APTO_CORTO = { 'OBJETOS DE DECORACIÓN': 'Decoración', 'RESISTENTE AL AGUA': 'Resistente al agua', 'ABSORBE LA HUMEDAD': 'Absorbe la humedad' };
+const aptoTxt = a => APTO_CORTO[a] || lindoV(a);
+const coloresDisp = a => [...new Set(a.items.filter(i => i.stock > 0).map(colorBase))];
+const texDe = a => TEX[a.tec.textura] || {};
+// "Ideal para…": lo cargado por el usuario para el artículo o, si no tocó nada, los productos finales de su textura
+const ideal = a => (ENR[a.key] && ENR[a.key].ideal) || texDe(a).finales || [];
+const todosIdeal = () => [...new Set(ARTS.flatMap(ideal).concat(Object.values(TEX).flatMap(t => t.finales || [])))].sort((x, y) => x.localeCompare(y, 'es'));
+if (!(st.mes >= 0 && st.mes < MESES.length)) st.mes = MESES.length - 1;
+const limpiar = () => { Object.assign(st, { q: '', cats: {}, sig: '', disp: 'stock', gmin: null, gmax: null, onlyEdited: false, vcat: '', catF: {} }); document.getElementById('q').value = ''; saveView(); render(); };
+
+function texto(it) {
+  const f = ficha(it);
+  const t = it.tec || {}, x = TEX[t.textura] || {};
+  return norm([it.art, it.color, it.sku, it.cat, it.menu, it.web && it.web.nombre, t.textura, t.reves, t.composicion, ...(t.aptos || []), ...(x.sinonimos || []), ...CAMPOS.map(c => f[c[0]])].join(' '));
+}
+const buscaArt = (a, qs) => !qs.length || a.items.some(i => (t => qs.every(w => t.includes(w)))(texto(i))) || (t => qs.every(w => t.includes(w)))(norm(ideal(a).join(' ')));
+
+const abiertos = new Set();
+// Faceta de color reutilizable: multi-selección, agrupada por familia
+const facColor = (k, t, v) => ({ k, t, v, lbl: lindoV, grupo: famColor, grupos: ORDEN_FAM, sw: c => swatch(c), swg: f => swFam(f) ? `<span class="sw" style="background:${swFam(f)}"></span>` : '<span class="sw x"></span>', abierto: true });
+// Panel de filtros genérico: cada faceta es multi-selección (O dentro de la faceta, Y entre facetas)
+function aplicaFacetas(lista, defs, sel, ignorar) {
+  return lista.filter(a => defs.every(d => d.k === ignorar || !(sel[d.k] || []).length || d.v(a).some(v => sel[d.k].includes(v))));
+}
+function panelFacetas(vista, lista, defs, sel) {
+  return `<div class="facetas">${defs.map(d => {
+    const base = aplicaFacetas(lista, defs, sel, d.k), cnt = {};
+    base.forEach(a => new Set(d.v(a)).forEach(v => cnt[v] = (cnt[v] || 0) + 1));
+    const elegidos = sel[d.k] || [];
+    let vals = [...new Set(lista.flatMap(d.v))];
+    vals = d.orden ? vals.sort(d.orden) : vals.sort((a, b) => (cnt[b] || 0) - (cnt[a] || 0) || String(a).localeCompare(String(b), 'es'));
+    const fila = v => `<label class="${cnt[v] ? '' : 'cero'}"><input type="checkbox" data-fac="${vista}" data-k="${d.k}" value="${esc(v)}" ${elegidos.includes(v) ? 'checked' : ''}>${d.sw ? d.sw(v) : ''}<span>${esc(d.lbl ? d.lbl(v) : v)}</span><small>${cnt[v] || 0}</small></label>`;
+    let cuerpo = vals.map(fila).join('');
+    // Faceta agrupada (familias de color): casilla por grupo + sus valores desplegables
+    if (d.grupo) {
+      const gs = {};
+      vals.sort((a, b) => String(a).localeCompare(String(b), 'es')).forEach(v => (gs[d.grupo(v)] = gs[d.grupo(v)] || []).push(v));
+      cuerpo = d.grupos.filter(g => gs[g]).map(g => {
+        const vs = gs[g], n = vs.reduce((x, v) => x + (cnt[v] || 0), 0), on = vs.filter(v => elegidos.includes(v)).length;
+        const abierto = abiertos.has(vista + d.k + g) || (on && on < vs.length);
+        return `<div class="fg"><label class="${n ? '' : 'cero'}"><input type="checkbox" data-facg="${vista}" data-k="${d.k}" data-vals="${esc(JSON.stringify(vs))}" ${on === vs.length ? 'checked' : ''} ${on && on < vs.length ? 'data-parcial' : ''}>${d.swg ? d.swg(g) : ''}<span><b>${esc(g)}</b></span><small>${n}</small></label>
+          ${vs.length > 1 ? `<button class="abre" data-abre="${esc(vista + d.k + g)}" title="${abierto ? 'Ocultar' : 'Ver'} colores">${abierto ? '▾' : '▸'} ${vs.length}</button>` : ''}
+          ${abierto && vs.length > 1 ? `<div class="fgv">${vs.map(fila).join('')}</div>` : ''}</div>`;
+      }).join('');
+    }
+    return `<details ${elegidos.length || d.abierto ? 'open' : ''}><summary>${d.t}${elegidos.length ? ` <b>(${elegidos.length})</b>` : ''}</summary>${cuerpo}</details>`;
+  }).join('')}${Object.values(sel).some(x => x && x.length) ? `<p><button class="btn" data-limpia="${vista}">Quitar filtros</button></p>` : ''}</div>`;
+}
+const numOrden = (a, b) => (parseFloat(String(a).replace(',', '.')) || 999) - (parseFloat(String(b).replace(',', '.')) || 999) || String(a).localeCompare(String(b));
+// Filtros del panel lateral: Catálogo, Saldos y Stock bajo (cada uno con su propia selección)
+const conPanel = () => PESTANAS_PANEL.includes(st.vista);
+function filtrados(ignorar) {
+  const qs = norm(st.q).split(/\s+/).filter(Boolean), p = conPanel();
+  return ITEMS.filter(it =>
+    (st.vista !== 'saldos' || esSaldo(it)) &&
+    (st.vista !== 'bajo' || it.stock < BAJO) &&
+    (!p || ignorar === 'cat' || enCats(it)) &&
+    (!p || ignorar === 'color' || !((st.catF || {}).color || []).length || st.catF.color.includes(colorBase(it))) &&
+    (!p || ignorar === 'sig' || !st.sig || (it.senal || '').startsWith(st.sig)) &&
+    (!p || dispOk(it)) &&
+    (!p || ignorar === 'grad' || gradOk(it)) &&
+    (!p || !st.onlyEdited || ENR[artKey(it)]) &&
+    (!qs.length || (t => qs.every(w => t.includes(w)))(texto(it))));
+}
+// Disponibilidad: pedidos hechos = en tránsito + pedidos sin facturar
+const pedidosHechos = it => (it.transito || 0) + (it.pedidos || 0);
+// Con "stock + pedidos hechos" o "solo pedidos hechos", los metros que se muestran suman lo pedido a China
+const conPedidos = () => conPanel() && (st.disp === 'stockped' || st.disp === 'ped');
+const mts = it => it.stock + (conPedidos() ? pedidosHechos(it) : 0);
+const sumaM = l => l.reduce((a, i) => a + mts(i), 0);
+const enStock = () => conPedidos() ? 'm en stock + pedidos' : 'm en stock';
+function dispOk(it) {
+  switch (st.disp) {
+    case 'stock': return it.stock > 0;
+    case 'stockped': return it.stock > 0 || pedidosHechos(it) > 0;
+    case 'ped': return pedidosHechos(it) > 0;
+    default: return true;
+  }
+}
+// Graduar stock: rango desde/hasta sobre el stock o sobre el disponible con pedidos
+const GRADOS = [['Hasta 200', null, 200], ['Hasta 400', null, 400], ['Hasta 800', null, 800], ['400 a 1.000', 400, 1000], ['Más de 1.000', 1000, null], ['Más de 3.000', 3000, null]];
+function gradOk(it) {
+  const v = st.gsobre === 'total' ? it.total : it.stock;
+  return (st.gmin == null || v >= st.gmin) && (st.gmax == null || v <= st.gmax);
+}
+function enCats(it) {
+  if (!Object.keys(st.cats).length) return true;
+  const s = st.cats[it.menu];
+  return !!s && (!s.length || (it.sub || []).some(x => s.includes(x)));
+}
+// Orden: productos sin precio o sin dato van al final
+const precio = it => (it.web && it.web.precio) || null;
+const ventaMes = it => it.ventas ? it.ventas[ULT] : 0;
+const conNulo = (a, b, f) => (a == null) - (b == null) || (a != null && b != null ? f(a, b) : 0);
+function orden(a, b) {
+  const alfa = a.art.localeCompare(b.art, 'es') || a.color.localeCompare(b.color, 'es');
+  switch (st.sort) {
+    case 'precioDesc': return conNulo(precio(a), precio(b), (x, y) => y - x) || alfa;
+    case 'precioAsc': return conNulo(precio(a), precio(b), (x, y) => x - y) || alfa;
+    case 'stock': return mts(b) - mts(a) || alfa;
+    case 'stockAsc': return mts(a) - mts(b) || alfa;
+    case 'total': return b.total - a.total || alfa;
+    case 'ventaMes': return ventaMes(b) - ventaMes(a) || alfa;
+    case 'cob': return conNulo(a.cobertura, b.cobertura, (x, y) => x - y) || alfa;
+    default: return alfa;
+  }
+}
+
+function filtros() {
+  const cnt = (list, key) => list.reduce((m, i) => (m[key(i)] = (m[key(i)] || 0) + 1, m), {});
+  const btn = (grp, val, label, n) => `<button class="f ${st[grp] === val ? 'on' : ''}" data-g="${grp}" data-v="${esc(val)}"><span>${esc(label)}</span><small>${n ?? ''}</small></button>`;
+  // Categorías con sus subcategorías web (multi-selección)
+  const lc = filtrados('cat'), cc = cnt(lc, i => i.menu), csub = {};
+  lc.forEach(i => (i.sub || []).forEach(s => csub[i.menu + '|' + s] = (csub[i.menu + '|' + s] || 0) + 1));
+  const nada = !Object.keys(st.cats).length;
+  document.getElementById('cats').innerHTML = `<div class="ct"><label class="${nada ? 'on' : ''}"><input type="checkbox" data-cat="*" ${nada ? 'checked' : ''}><span>Todas</span><small>${lc.length}</small></label></div>` +
+    CATS.map(c => {
+      const sel = st.cats[c], subs = (SUBS[c] || []).concat(lc.some(i => i.menu === c && (i.sub || []).includes('Otros')) ? ['Otros'] : []).filter(s => csub[c + '|' + s] || (sel && sel.includes(s)));
+      const abierto = abiertosCat.has(c) && subs.length;
+      return `<div class="ct"><label class="${sel ? 'on' : ''} ${cc[c] ? '' : 'cero'}"><input type="checkbox" data-cat="${esc(c)}" ${sel ? 'checked' : ''}><span>${esc(lindoV(c))}</span><small>${cc[c] || 0}</small></label>
+        ${subs.length ? `<button class="abre" data-abrecat="${esc(c)}" title="${abierto ? 'Ocultar' : 'Ver'} subcategorías">${abierto ? '▾' : '▸'}</button>` : '<span></span>'}
+        ${abierto ? `<div class="cs">${sel && !sel.length ? '<div class="todo">Toda la categoría · marcá subcategorías para acotar</div>' : ''}
+          ${subs.map(s => `<label class="${csub[c + '|' + s] ? '' : 'cero'}"><input type="checkbox" data-sub="${esc(c + '|' + s)}" ${sel && sel.includes(s) ? 'checked' : ''}><span>${esc(s)}</span><small>${csub[c + '|' + s] || 0}</small></label>`).join('')}</div>` : ''}</div>`;
+    }).join('');
+  // Color: el mismo filtro agrupado por familia que Stock bajo
+  document.getElementById('colores').innerHTML = panelFacetas('cat', filtrados('color'), [facColor('color', 'Color', i => [colorBase(i)])], st.catF);
+  const ls = filtrados('sig'), cs = cnt(ls, i => (i.senal || '').split(' — ')[0]);
+  document.getElementById('sigs').innerHTML = btn('sig', '', 'Todas', ls.length) + SIGS.map(s => btn('sig', s, s.charAt(0) + s.slice(1).toLowerCase(), cs[s] || 0)).join('');
+  document.getElementById('onlyEdited').checked = st.onlyEdited;
+  document.querySelectorAll('input[name="disp"]').forEach(r => r.checked = r.value === st.disp);
+  // Graduación: los campos solo se reescriben si no se está tipeando en ellos
+  document.getElementById('gsobre').value = st.gsobre;
+  for (const k of ['gmin', 'gmax']) { const el = document.getElementById(k); if (document.activeElement !== el) el.value = st[k] ?? ''; }
+  const lg = filtrados('grad'), med = i => st.gsobre === 'total' ? i.total : i.stock;
+  document.querySelector('#grad .gr-chips').innerHTML = GRADOS.map(([t, a, b]) => {
+    const on = st.gmin === a && st.gmax === b, n = lg.filter(i => (a == null || med(i) >= a) && (b == null || med(i) <= b)).length;
+    return `<button class="chip ${on ? 'on' : ''}" data-grad="${a ?? ''}|${b ?? ''}">${t}<small>${n}</small></button>`;
+  }).join('') + (st.gmin != null || st.gmax != null ? '<button class="chip" data-grad="|">Quitar</button>' : '');
+  document.querySelectorAll('input[name="modo"]').forEach(r => r.checked = r.value === st.modo);
+  document.getElementById('sort').value = st.sort;
+}
+
+function foto(it, cls = '') {
+  const ini = esc(it.art.slice(0, 3).toUpperCase());
+  return `<img class="${cls}" loading="lazy" src="${esc(encodeURI(it.img))}" alt="${esc(it.art + ' ' + it.color)}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">` +
+    `<div class="noimg" style="display:none"><div><b>${ini}</b>Sin foto en la web<br><small>${esc(it.color)}</small></div></div>`;
+}
+
+// Letra chica de la tarjeta: venta estimada y el detalle del análisis de compra (sin repetir la señal)
+function ventaEst(it) {
+  const det = (it.analisis || '').split(' — ').slice(1).join(' — ');
+  const cob = it.cobertura != null ? ` · cubre ${String(it.cobertura).replace('.', ',')} meses` : '';
+  return `<div class="ve">Venta est. ${fmt(it.venta)} m/mes${cob}${det ? `<span>${esc(det)}</span>` : ''}</div>`;
+}
+
+function card(it, grupo) {
+  const sig = it.senal ? `<span class="pill sig ${sigClass(it.senal)}">${esc(it.senal)}</span>` : '';
+  const saldo = !grupo && esSaldo(it) ? `<span class="pill saldo p-SALDO">SALDO</span>` : '';
+  const tag = it.imgTipo === 'aprox' ? '<span class="tag">foto de otro color</span>' : '';
+  const ed = ENR[artKey(it)] ? ' <span class="edited" title="Ficha editada">●</span>' : '';
+  if (grupo) {
+    const stock = sumaM(grupo);
+    return `<div class="card" data-sku="${esc(it.sku)}"><div class="ph">${foto(it)}</div>
+      <div class="body"><div class="a">${esc(it.art)}${ed}</div><div class="c">${grupo.length} color${grupo.length > 1 ? 'es' : ''}</div>
+      <div class="s">${esc(FAM[it.fam]?.familia || '')}</div>
+      <div class="st"><span>stock</span><b class="${stock ? '' : 'zero'}">${fmt(stock)} m</b></div></div></div>`;
+  }
+  const el = SEL_SET.has(it.sku);
+  return `<div class="card ${el ? 'elegida' : ''}" data-sku="${esc(it.sku)}" data-i="${ITEMS.indexOf(it)}"><div class="ph"><label class="selbox" title="Seleccionar"><input type="checkbox" data-sel="${esc(it.sku)}" ${el ? 'checked' : ''}></label>${foto(it)}${tag}${saldo}${sig}</div>
+    <div class="body"><div class="a">${esc(it.art)}${ed}</div><div class="c">${esc(it.color || '—')}</div><div class="s">${esc(it.sku)}</div>
+    ${precio(it) ? `<div class="pr">${precioTxt(it)}</div>` : ''}
+    ${ventaEst(it)}
+    <div class="st"><span>${conPedidos() ? 'stock + pedidos' : 'stock'}</span><b class="${mts(it) ? '' : 'zero'}" ${conPedidos() ? `title="${fmt(it.stock)} m en stock + ${fmt(pedidosHechos(it))} m pedidos"` : ''}>${fmt(mts(it))} m</b></div></div></div>`;
+}
+
+const VISTAS = [['cat', 'Catálogo'], ['saldos', `Saldos (&lt;${SALDO} m)`], ['bajo', `Stock bajo (&lt;${BAJO} m)`], ['ventas', 'Ventas del mes'], ['tecnica', 'Vista técnica'], ['inspira', 'Inspiración'], ['combo', 'Combinaciones y reemplazos']];
+function tabs() {
+  const n = { cat: ITEMS.length, saldos: ITEMS.filter(esSaldo).length, bajo: ITEMS.filter(i => i.stock < BAJO).length };
+  document.getElementById('tabs').innerHTML = VISTAS.map(([k, l]) => `<button class="${st.vista === k ? 'on' : ''}" data-vista="${k}">${l}${n[k] != null ? `<small>${fmt(n[k])}</small>` : ''}</button>`).join('');
+  document.getElementById('layout').classList.toggle('full', !conPanel());
+  document.documentElement.style.setProperty('--hh', document.querySelector('header').offsetHeight + 'px');
+}
+const suma = (l, k) => l.reduce((a, i) => a + i[k], 0);
+function stats(list) {
+  document.getElementById('stats').innerHTML = `<span><b>${fmt(list.length)}</b> SKU</span><span><b>${fmt(new Set(list.map(artKey)).size)}</b> artículos</span><span><b>${fmt(sumaM(list))}</b> ${enStock()}</span>${conPedidos() ? '' : `<span><b>${fmt(suma(list, 'total'))}</b> m disponibles c/pedidos</span>`}`;
+}
+const vacio = (main, txt = 'No hay artículos con esos filtros.') => { main.innerHTML = `<div class="empty">${txt}<br><br><button class="btn" id="limpiar">Quitar todos los filtros</button></div>`; document.getElementById('limpiar').onclick = limpiar; };
+
+function render() {
+  renderVista();
+  // Casilla de familia con solo algunos colores marcados
+  document.querySelectorAll('[data-parcial]').forEach(e => e.indeterminate = true);
+}
+function renderVista() {
+  tabs();
+  if (conPanel()) filtros();
+  const main = document.getElementById('main');
+  if (st.vista === 'ventas') return renderVentas(main);
+  if (st.vista === 'tecnica') return renderTecnica(main);
+  if (st.vista === 'inspira') return renderInspira(main);
+  if (st.vista === 'combo') return renderCombo(main);
+  const list = filtrados().sort(orden);
+  stats(list);
+  if (!list.length) return vacio(main);
+  // Categoría del menú web → (según la vista) filas por artículo, cards combinadas, listado o detalle
+  const porCat = {};
+  list.forEach(i => (porCat[i.menu] = porCat[i.menu] || []).push(i));
+  const intro = st.vista === 'saldos' ? `<p class="intro">Saldos: productos con stock entre 1 y ${SALDO - 1} m. Usá el panel de la izquierda para elegir categorías, colores y cómo verlos.</p>`
+    : st.vista === 'bajo' ? `<p class="intro">Stock bajo: productos con menos de ${fmt(BAJO)} m. Arranca filtrado en negros, marrones y blancos; cambialo en <b>Color</b>, a la izquierda. Elegí "Todos los productos" o "Solo con stock + pedidos hechos" para ver también los que están en 0.</p>` : '';
+  main.innerHTML = intro + CATS.filter(c => porCat[c]).map(c => {
+    const its = porCat[c];
+    // Artículos en el orden del primero de sus colores (la lista ya viene ordenada)
+    const g = {};
+    its.forEach(i => (g[artKey(i)] = g[artKey(i)] || []).push(i));
+    const arts = Object.values(g);
+    let cuerpo;
+    if (st.modo === 'cards') cuerpo = `<div class="grid">${its.map(i => card(i)).join('')}</div>`;
+    else if (st.modo === 'lista') cuerpo = listado(its);
+    else if (st.modo === 'detalle') cuerpo = arts.map(arr => fichaTec(Object.assign({}, ART[artKey(arr[0])], { foto: arr.find(i => i.imgTipo !== 'sin') || arr[0], stock: sumaM(ART[artKey(arr[0])].items) }), arr)).join('');
+    else cuerpo = arts.map(arr => `<div class="art"><h3>${esc(arr[0].art)} <small>${arr.length} color${arr.length > 1 ? 'es' : ''} · ${fmt(sumaM(arr))} ${enStock()} · venta est. ${fmt(suma(arr, 'venta'))} m/mes</small></h3>
+          <div class="grid">${arr.map(i => card(i)).join('')}</div></div>`).join('');
+    return `<div class="sec"><h2>${esc(c)} <small>${arts.length} artículos · ${its.length} SKU · ${fmt(sumaM(its))} ${enStock()}</small></h2>${cuerpo}</div>`;
+  }).join('');
+}
+const precioTxt = it => precio(it) ? '$' + fmt(precio(it)) : '—';
+// Columnas del listado: clic en el título ordena (números de mayor a menor, textos A→Z); otro clic invierte
+const COLS_LISTA = [
+  ['art', 'Artículo', i => i.art],
+  ['color', 'Color', i => i.color],
+  ['sub', 'Subcategoría', i => (i.sub || []).join(', ')],
+  ['sku', 'SKU', i => i.sku],
+  ['precio', 'Precio web', precio, 1],
+  ['stock', 'Stock', mts, 1],
+  ['total', 'Disponible', i => i.total, 1],
+  ['venta', 'Venta ' + (MESES[ULT] || ''), ventaMes, 1],
+  ['cob', 'Cobertura', i => i.cobertura, 1],
+  ['senal', 'Señal', i => i.senal ? SIGS.findIndex(s => i.senal.startsWith(s)) : null, 2]
+];
+function ordenLista(its) {
+  const c = st.lcol && COLS_LISTA.find(x => x[0] === st.lcol.k);
+  if (!c) return its;
+  const [, , v, tipo] = c, inv = st.lcol.inv ? -1 : 1;
+  // Números: mayor a menor; textos y señal (Comprar primero): ascendente. Sin dato, siempre al final.
+  const cmp = (a, b) => tipo === 1 ? b - a : tipo === 2 ? a - b : String(a).localeCompare(String(b), 'es');
+  return its.slice().sort((a, b) => conNulo(v(a) === '' ? null : v(a), v(b) === '' ? null : v(b), (x, y) => cmp(x, y) * inv) || orden(a, b));
+}
+function listado(its) {
+  its = ordenLista(its);
+  const th = ([k, t, , n]) => { const on = st.lcol && st.lcol.k === k; if (k === 'stock' && conPedidos()) t = 'Stock + pedidos'; return `<th class="ord ${n === 1 ? 'n' : ''} ${on ? 'on' : ''}" data-lcol="${k}" title="Ordenar por ${esc(t.toLowerCase())}">${esc(t)}${on ? (n === 1 ? (st.lcol.inv ? ' ▲' : ' ▼') : (st.lcol.inv ? ' ▼' : ' ▲')) : ''}</th>`; };
+  const todos = its.length && its.every(i => SEL_SET.has(i.sku));
+  return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="selcol"><input type="checkbox" data-selall="${esc(its.map(i => i.sku).join('|'))}" title="Seleccionar todos los de esta tabla" ${todos ? 'checked' : ''}></th><th></th>${COLS_LISTA.map(th).join('')}</tr></thead><tbody>
+    ${its.map(i => `<tr data-i="${ITEMS.indexOf(i)}" class="${SEL_SET.has(i.sku) ? 'elegida' : ''}"><td class="selcol"><input type="checkbox" data-sel="${esc(i.sku)}" ${SEL_SET.has(i.sku) ? 'checked' : ''}></td><td>${i.imgTipo !== 'sin' ? `<img class="mini-img" loading="lazy" src="${esc(encodeURI(i.img))}" alt="">` : '<div class="mini-img"></div>'}</td>
+      <td><b>${esc(i.art)}</b></td><td>${swatch(i.color)}${esc(i.color || '—')}</td><td>${esc((i.sub || []).join(', '))}</td><td style="font-family:ui-monospace,Consolas,monospace;font-size:12px">${esc(i.sku)}</td>
+      <td class="n">${precioTxt(i)}</td><td class="n"><b>${fmt(mts(i))} m</b></td><td class="n">${fmt(i.total)} m</td><td class="n">${fmt(ventaMes(i))} m</td>
+      <td class="n">${i.cobertura != null ? String(i.cobertura).replace('.', ',') + ' m.' : '—'}</td>
+      <td>${esSaldo(i) ? '<span class="pill p-SALDO">SALDO</span> ' : ''}${i.senal ? `<span class="pill ${sigClass(i.senal)}">${esc(i.senal)}</span>` : ''}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+// Muestra del color físico del producto (aproximada por el nombre); sin coincidencia, trama neutra
+const TONOS = { NEGRO: '#1b1b1b', BLANCO: '#ffffff', HUESO: '#efe6d2', CRUDO: '#efe8d8', NATURAL: '#e6d8bd', NUDE: '#d9b49a', BEIGE: '#d8c3a0', ALMENDRA: '#e8d3b0', ARENA: '#d6c19a', CAMEL: '#b8834a', MIEL: '#c8892b', SUELA: '#a0612b', COGNAC: '#9a4f1f', CHOCOLATE: '#4e2f1f', MARRON: '#6d4c41', MOCCA: '#6f4e37', TOPO: '#8b7d6b', VISON: '#a08c7d', TAUPE: '#8b7d6b', GRIS: '#8e8e93', PLOMO: '#6e6e73', PLATA: '#c0c0c0', PELTRE: '#8a8d8f', ORO: '#c9a227', DORADO: '#c9a227', COBRE: '#b87333', BRONCE: '#8c6a3f', BORDO: '#6d1a2a', ROJO: '#c62828', TOMATE: '#e0442a', CORAL: '#f2725e', TERRA: '#b5562f', NARANJA: '#f57c00', MAIZ: '#f2c94c', AMARILLO: '#f4d03f', MOSTAZA: '#c9a227', VERDE: '#2e7d32', OLIVA: '#6b6b2a', MILITAR: '#4b5320', AZUL: '#1f3a93', MARINO: '#1a2a5a', CELESTE: '#8ec5e8', TURQUEZA: '#1aa6a6', TURQUESA: '#1aa6a6', FUCIA: '#d81b84', ROSA: '#f4a6b8', LILA: '#b39ddb', VIOLETA: '#6a3d9a', UVA: '#5b2a4a', CHAMPAGNE: '#e9d8b4', PERLA: '#eae6df',
+  CARAMELO: '#b06a2c', MADERA: '#9c6b3f', HABANO: '#8a5a33', MANTECA: '#f3e6c4', TIZA: '#ece9e2', OCRE: '#c8962e', MANZANA: '#7cc243', LIMA: '#c4e04a',
+  JEAN: '#3b5b8c', CHICLE: '#f39ac0', LAVANDA: '#b9a7e0', PLATINO: '#d9d9de', ROSE: '#d8a39a', CORCHO: '#b48a5e', NEON: '#c6ff00', FLUO: '#d4ff2a',
+  LEOPARDO: '#b07a3c', CHITA: '#c08a40', JAGUAR: '#b5884f', CROCO: '#5f5a46', VACA: '#3a3a3a', TORNASOL: '#b9c8d8', TRANSPARENTE: '#f6f8fa' };
+function swatch(color) {
+  const w = norm(color).toUpperCase().split(/[^A-Z]+/), t = w.map(x => TONOS[x]).find(Boolean);
+  return t ? `<span class="sw" style="background:${t}"></span>` : '<span class="sw x"></span>';
+}
+
+// Ventas del mes: barras por artículo y color + 5 más y 5 menos vendidos
+// Gráfico vertical con todas las ventas del mes (una columna por artículo + color, de mayor a menor).
+// Destacados: los que venden muy por encima del resto (más de promedio + 2 desvíos estándar), con nombre a la vista.
+function graficoTodas(vend, v, prom, mes) {
+  if (!vend.length) return '';
+  const xs = vend.map(v), media = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const umbral = media + 2 * Math.sqrt(xs.reduce((a, b) => a + (b - media) ** 2, 0) / xs.length);
+  let dest = vend.filter(i => v(i) > umbral).slice(0, 15);
+  if (dest.length < 3) dest = vend.slice(0, Math.min(3, vend.length));
+  const esDest = new Set(dest), max = v(vend[0]);
+  const totArt = {}; vend.forEach(i => totArt[artKey(i)] = (totArt[artKey(i)] || 0) + v(i));
+  const tope = Math.ceil(max / Math.pow(10, Math.floor(Math.log10(max)))) * Math.pow(10, Math.floor(Math.log10(max)));
+  const lineas = [0.25, 0.5, 0.75, 1].map(f => `<div class="vg" style="bottom:calc(var(--lab) + var(--alto) * ${f})"><span>${fmt(tope * f)}</span></div>`).join('');
+  const parte = dest.reduce((a, i) => a + v(i), 0), total = vend.reduce((a, i) => a + v(i), 0);
+  return `<div class="vchart"><h3>Todas las ventas de ${esc(mes)} · ${fmt(vend.length)} artículos por color</h3>
+    <p class="intro">Cada columna es un artículo en un color, de mayor a menor. En azul, los ${dest.length} que venden muy por encima del resto (más de ${fmt(umbral)} m en el mes): juntos suman ${fmt(parte)} m, el ${Math.round(parte / total * 100)} % de lo vendido. Pasá el mouse por cualquier columna para ver el detalle.</p>
+    <div class="vplot">${lineas}<div class="vbars">${vend.map(i => {
+      const d = esDest.has(i), h = v(i) / tope * 100;
+      return `<div class="vb ${d ? 'd' : ''}" data-i="${ITEMS.indexOf(i)}" data-tip="${esc(JSON.stringify([i.art, i.color || '—', v(i), Math.round(v(i) / totArt[artKey(i)] * 100), Math.round(prom(i)), i.stock]))}">
+        <div class="va">${d ? `<span class="vv">${fmt(v(i))}</span>` : ''}<i style="height:${h}%"></i></div>
+        <div class="vl2">${d ? `<b>${esc(i.art)}</b><span class="vc">${swatch(i.color)}${esc(i.color || '—')}</span>` : ''}</div></div>`;
+    }).join('')}</div></div></div>`;
+}
+
+function renderVentas(main) {
+  const m = st.mes, qs = norm(st.q).split(/\s+/).filter(Boolean);
+  const base = ITEMS.filter(i => i.ventas && (!st.vcat || i.menu === st.vcat) && (!qs.length || qs.every(w => texto(i).includes(w))));
+  const v = i => i.ventas[m], vend = base.filter(i => v(i) > 0).sort((a, b) => v(b) - v(a));
+  const tot = vend.reduce((a, i) => a + v(i), 0), ant = m > 0 ? base.reduce((a, i) => a + i.ventas[m - 1], 0) : null;
+  const prom = i => i.ventas.reduce((a, x) => a + x, 0) / i.ventas.length;
+  document.getElementById('stats').innerHTML = `<span><b>${fmt(tot)}</b> m vendidos en ${esc(MESES[m])}</span><span><b>${fmt(vend.length)}</b> SKU con venta</span>`;
+  const g = {};
+  vend.forEach(i => (g[artKey(i)] = g[artKey(i)] || []).push(i));
+  const arts = Object.values(g).sort((a, b) => b.reduce((s, i) => s + v(i), 0) - a.reduce((s, i) => s + v(i), 0));
+  const max = vend.length ? v(vend[0]) : 1;
+  const li = i => `<li data-i="${ITEMS.indexOf(i)}"><span>${swatch(i.color)}${esc(i.art)} <em>${esc(i.color || '—')}</em></span><b>${fmt(v(i))} m</b></li>`;
+  const varia = ant ? Math.round((tot - ant) / ant * 100) : null;
+  main.innerHTML = `
+    <div class="bar">
+      <label>Mes<select data-f="mes">${MESES.map((n, k) => `<option value="${k}" ${k === m ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+      <label>Categoría web<select data-f="vcat"><option value="">Todas</option>${CATS.map(c => `<option value="${esc(c)}" ${c === st.vcat ? 'selected' : ''}>${esc(c.charAt(0) + c.slice(1).toLowerCase())}</option>`).join('')}</select></label>
+    </div>
+    ${graficoTodas(vend, v, prom, MESES[m])}
+    <div class="kpis v">
+      <div class="kpi"><small>Vendido en ${esc(MESES[m])}</small><b>${fmt(tot)} m</b></div>
+      <div class="kpi"><small>vs. ${m > 0 ? esc(MESES[m - 1]) : 'mes anterior'}</small><b>${varia == null ? '—' : (varia > 0 ? '+' : '') + varia + ' %'}</b></div>
+      <div class="kpi"><small>Artículos con venta</small><b>${fmt(arts.length)}</b></div>
+      <div class="kpi"><small>SKU (artículo + color) con venta</small><b>${fmt(vend.length)}</b></div>
+    </div>
+    ${vend.length ? `<div class="rk">
+      <div><h3>Los 5 más vendidos</h3><ol>${vend.slice(0, 5).map(li).join('')}</ol></div>
+      <div><h3>Los 5 menos vendidos <small style="color:var(--muted);font-weight:400">(entre los que vendieron algo)</small></h3><ol>${vend.slice(-5).reverse().map(li).join('')}</ol></div>
+    </div>
+    <div class="chart"><h3>Metros vendidos por artículo y color · ${esc(MESES[m])}</h3>
+      <p class="intro">Ordenado de mayor a menor. Todas las barras usan la misma escala; el cuadradito muestra el color del producto.</p>
+      ${arts.map(arr => `<div class="grp"><div class="gh"><span>${esc(arr[0].art)}</span><small>${fmt(arr.reduce((s, i) => s + v(i), 0))} m · ${arr.length} color${arr.length > 1 ? 'es' : ''}</small></div>
+        ${arr.map(i => `<div class="row" data-i="${ITEMS.indexOf(i)}" data-tip="${esc(JSON.stringify([i.art, i.color || '—', v(i), Math.round(v(i) / arr.reduce((s, x) => s + v(x), 0) * 100), Math.round(prom(i)), i.stock]))}">
+          <div class="lb">${swatch(i.color)}${esc(i.color || '—')}</div><div class="tr"><i style="width:${v(i) / max * 100}%"></i></div><div class="vl">${fmt(v(i))} m</div></div>`).join('')}
+      </div>`).join('')}
+    </div>` : '<div class="empty">No hay ventas registradas para ese mes con estos filtros.</div>'}`;
+}
+
+// --- Vista técnica: filtrar y reagrupar artículos por sus características ---
+const ordenCat = (a, b) => CATS.indexOf(a) - CATS.indexOf(b);
+const ordenRot = (a, b) => ROT.indexOf(b) - ROT.indexOf(a);
+const sd = v => v || 'Sin dato';
+const DEF_TEC = [
+  { k: 'menu', t: 'Categoría', v: a => [a.menu], lbl: lindoV, orden: ordenCat, abierto: true },
+  { k: 'tex', t: 'Textura', v: a => [sd(a.tec.textura)], lbl: lindoV },
+  { k: 'ancho', t: 'Ancho', v: a => [sd(a.tec.ancho)], orden: numOrden },
+  { k: 'esp', t: 'Espesor', v: a => [sd(a.tec.espesor)], orden: numOrden },
+  { k: 'aptos', t: 'Aptos', v: a => a.tec.aptos && a.tec.aptos.length ? a.tec.aptos : ['Sin dato'], lbl: aptoTxt },
+  facColor('color', 'Colores disponibles (con stock)', coloresDisp),
+  { k: 'reves', t: 'Revés', v: a => [sd(a.tec.reves)] },
+  { k: 'comp', t: 'Composición', v: a => [sd(a.tec.composicion)] },
+  { k: 'rot', t: 'Rotación del último mes', v: a => [ROT[a.rot]], orden: ordenRot, abierto: true }
+];
+const AGRUPAR = { menu: ['Categoría', a => a.menu, lindoV], tex: ['Textura', a => sd(a.tec.textura), lindoV], tipo: ['Tipo de producto', a => a.cat, lindoV], ancho: ['Ancho', a => sd(a.tec.ancho)], esp: ['Espesor', a => sd(a.tec.espesor)], reves: ['Revés', a => sd(a.tec.reves)], comp: ['Composición', a => sd(a.tec.composicion)], rot: ['Rotación del último mes', a => ROT[a.rot]] };
+function fichaTec(a) {
+  const dd = (t, v) => `<div><dt>${t}</dt><dd>${v ? esc(v) : '<span class="est">Sin dato</span>'}</dd></div>`;
+  const cols = [...new Set(a.items.map(i => i.color || '—'))].map(c => { const its = a.items.filter(i => (i.color || '—') === c), s = its.reduce((x, i) => x + i.stock, 0); return `<span class="tag ${s ? '' : 'off'}" title="${fmt(s)} m en stock">${swatch(c)}${esc(c)}</span>`; }).join('');
+  return `<div class="tec" data-i="${ITEMS.indexOf(a.foto)}"><div class="ph">${foto(a.foto)}</div><div>
+    <h3>${esc(a.art)} <small>${esc(lindoV(a.tec.textura || ''))} · ${esc(lindoV(a.menu))}</small> ${rotPill(a)}</h3>
+    <dl>${dd('Ancho', a.tec.ancho)}${dd('Espesor', a.tec.espesor)}${dd('Revés', a.tec.reves)}${dd('Composición', a.tec.composicion)}
+      <div><dt>${conPedidos() ? 'Stock + pedidos' : 'Stock total'}</dt><dd>${fmt(a.stock)} m</dd></div><div><dt>Vendido en ${esc(MESES[ULT] || '')}</dt><dd>${fmt(a.vUlt)} m</dd></div>
+      ${(ps => ps.length ? `<div><dt>Precio web</dt><dd>$${fmt(Math.min(...ps))}${Math.max(...ps) > Math.min(...ps) ? ' – $' + fmt(Math.max(...ps)) : ''}</dd></div>` : '')(a.items.map(precio).filter(Boolean))}</dl>
+    <div class="fila"><b>Aptos</b><div class="tags">${(a.tec.aptos || []).map(x => `<span class="tag">${esc(aptoTxt(x))}</span>`).join('') || '<span class="est">Sin dato</span>'}${a.tec.aptosFuente && a.tec.aptosFuente !== 'catálogo' ? ' <span class="est">(estimado por textura)</span>' : ''}</div></div>
+    <div class="fila"><b>Colores</b><div class="tags">${cols}</div></div>
+    ${a.tec.pag ? `<div class="fila"><b>Catálogo</b><span class="est">${esc(a.tec.pag)}</span></div>` : ''}
+  </div></div>`;
+}
+function renderTecnica(main) {
+  const qs = norm(st.q).split(/\s+/).filter(Boolean);
+  const base = ARTS.filter(a => buscaArt(a, qs)), list = aplicaFacetas(base, DEF_TEC, st.tecF);
+  if (!AGRUPAR[st.tecG]) st.tecG = 'tex';
+  const [gT, gF, gL] = AGRUPAR[st.tecG], grupos = {};
+  list.forEach(a => (grupos[gF(a)] = grupos[gF(a)] || []).push(a));
+  const claves = Object.keys(grupos).sort(st.tecG === 'menu' ? ordenCat : st.tecG === 'rot' ? ordenRot : ['ancho', 'esp'].includes(st.tecG) ? numOrden : (a, b) => a.localeCompare(b, 'es'));
+  document.getElementById('stats').innerHTML = `<span><b>${fmt(list.length)}</b> artículos</span><span><b>${fmt(list.reduce((x, a) => x + a.items.length, 0))}</b> SKU</span>`;
+  main.innerHTML = `<div class="dos">${panelFacetas('tec', base, DEF_TEC, st.tecF)}<div>
+    <div class="bar"><label>Agrupar por<select data-f="tecG">${Object.entries(AGRUPAR).map(([k, [t]]) => `<option value="${k}" ${k === st.tecG ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      <p class="intro" style="margin:0 0 4px">Rotación: los artículos que vendieron en ${esc(MESES[ULT] || 'el último mes')} se dividen en tercios (más pedido, rotación media, poco pedido).</p></div>
+    ${list.length ? claves.map(c => `<div class="grupo"><h2>${esc(gL ? gL(c) : c)} <small>${grupos[c].length} artículo${grupos[c].length > 1 ? 's' : ''}</small></h2>${grupos[c].map(fichaTec).join('')}</div>`).join('') : '<div class="empty">No hay artículos con esas características.</div>'}
+  </div></div>`;
+}
+
+// --- Inspiración: textura, sinónimos, aptos, espesor y "Ideal para…" (editable) ---
+const DEF_INS = [
+  { k: 'tex', t: 'Textura', v: a => [sd(a.tec.textura)], lbl: lindoV, abierto: true },
+  { k: 'sin', t: 'Sinónimos del mercado', v: a => texDe(a).sinonimos || [] },
+  { k: 'aptos', t: 'Aptos', v: a => a.tec.aptos && a.tec.aptos.length ? a.tec.aptos : ['Sin dato'], lbl: aptoTxt },
+  { k: 'esp', t: 'Espesor', v: a => [sd(a.tec.espesor)], orden: numOrden },
+  { k: 'ideal', t: 'Ideal para…', v: ideal, abierto: true }
+];
+function renderInspira(main) {
+  const qs = norm(st.q).split(/\s+/).filter(Boolean);
+  const base = ARTS.filter(a => buscaArt(a, qs)), list = aplicaFacetas(base, DEF_INS, st.insF).sort((a, b) => b.rot - a.rot || b.vUlt - a.vUlt || b.stock - a.stock);
+  document.getElementById('stats').innerHTML = `<span><b>${fmt(list.length)}</b> artículos · los más pedidos primero</span>`;
+  const tagsDe = arr => arr.map(x => `<span class="tag">${esc(x)}</span>`).join('');
+  main.innerHTML = `<datalist id="idealList">${todosIdeal().map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+    <div class="dos">${panelFacetas('ins', base, DEF_INS, st.insF)}<div>
+    <p class="intro">Cada artículo con su textura, cómo se la conoce en el mercado, para qué es apto y qué productos se pueden hacer. En <b>Ideal para…</b> podés sumar productos (escribiendo uno nuevo o eligiendo uno ya cargado) o quitar los que no correspondan; se guarda con <b>Guardar fichas</b>.</p>
+    ${list.length ? `<div class="ins">${list.map(a => { const x = texDe(a); return `<div class="insp">
+      <div class="ph" data-i="${ITEMS.indexOf(a.foto)}">${foto(a.foto)}</div>
+      <div class="bd">
+        <h3>${esc(a.art)} <small>${esc(lindoV(a.tec.textura || ''))}</small></h3>
+        <div class="tx">${esc(x.descripcion || '')}</div>
+        ${x.sinonimos ? `<div><div class="lbl">También se lo conoce como</div><div class="tags">${tagsDe(x.sinonimos)}</div></div>` : ''}
+        <div><div class="lbl">Aptos${a.tec.aptosFuente && a.tec.aptosFuente !== 'catálogo' ? ' <span class="est">(estimado)</span>' : ''}</div><div class="tags">${tagsDe((a.tec.aptos || []).map(aptoTxt)) || '<span class="est">Sin dato</span>'}</div></div>
+        <div><div class="lbl">Espesor</div><div style="font-size:13px">${esc(a.tec.espesor || 'Sin dato')}${a.tec.ancho ? ` · ancho ${esc(a.tec.ancho)}` : ''}</div></div>
+        <div><div class="lbl">Ideal para…</div><div class="tags">${ideal(a).map(v => `<span class="tag">${esc(v)}<button title="Quitar" data-quita="${esc(a.key)}" data-v="${esc(v)}">×</button></span>`).join('') || '<span class="est">Sin productos cargados</span>'}</div>
+          <div class="add"><input list="idealList" data-addin="${esc(a.key)}" placeholder="Agregar producto…"><button class="btn" data-add="${esc(a.key)}">Agregar</button></div></div>
+      </div></div>`; }).join('')}</div>` : '<div class="empty">No hay artículos con esos criterios.</div>'}
+  </div></div>`;
+}
+function setIdeal(key, lista) {
+  ENR[key] = Object.assign({}, ENR[key] || {}, { ideal: [...new Set(lista.map(s => s.trim()).filter(Boolean))], art: ART[key].art, t: Date.now() });
+  persist(); render();
+}
+
+// --- Combinaciones y reemplazos ---
+function sugerencias(sel) {
+  const a0 = ART[artKey(sel)], c0 = colorBase(sel), t0 = sel.tec || {};
+  const otros = ITEMS.filter(i => i.stock > 0 && artKey(i) !== a0.key);
+  const comunes = i => (i.tec.aptos || []).filter(x => (t0.aptos || []).includes(x)).length;
+  const mejorPorArt = (lista, score) => {
+    const m = {};
+    lista.forEach(i => { const s = score(i), k = artKey(i); if (!m[k] || s > m[k].s || (s === m[k].s && i.stock > m[k].i.stock)) m[k] = { i, s }; });
+    return Object.values(m).sort((x, y) => y.s - x.s || y.i.stock - x.i.stock).slice(0, 12);
+  };
+  const espCerca = i => t0.espMm != null && i.tec.espMm != null ? Math.max(0, 2 - Math.abs(i.tec.espMm - t0.espMm) * 5) : 0;
+  return {
+    colores: a0.items.filter(i => i !== sel && i.stock > 0).sort((x, y) => y.stock - x.stock).map(i => ({ i, por: [] })),
+    porColor: mejorPorArt(otros.filter(i => colorBase(i) === c0), i => comunes(i) + (i.menu === sel.menu ? 1 : 0) + espCerca(i) / 2)
+      .map(({ i }) => ({ i, por: [lindoV(i.tec.textura || ''), comunes(i) ? `${comunes(i)} aptos en común` : ''] })),
+    porTextura: mejorPorArt(otros.filter(i => t0.textura && i.tec.textura === t0.textura), i => (colorBase(i) === c0 ? 3 : 0) + espCerca(i) + comunes(i) / 2)
+      .map(({ i }) => ({ i, por: [colorBase(i) === c0 ? 'mismo color' : '', i.tec.espesor ? 'espesor ' + i.tec.espesor : ''] })),
+    reemplazos: mejorPorArt(otros, i => (t0.textura && i.tec.textura === t0.textura ? 3 : 0) + (i.fam === sel.fam ? 2 : 0) + comunes(i) + espCerca(i) + (colorBase(i) === c0 ? 2 : 0) + (i.menu === sel.menu ? 1 : 0))
+      .map(({ i }) => ({ i, por: [i.tec.textura === t0.textura ? 'misma textura' : '', i.fam === sel.fam ? 'mismo tipo de material' : '', espCerca(i) >= 1.5 ? 'espesor similar' : '', colorBase(i) === c0 ? 'mismo color' : '', comunes(i) ? `${comunes(i)} aptos en común` : ''] }))
+  };
+}
+const cardSug = ({ i, por }) => card(i).replace('<div class="st">', `${por.filter(Boolean).length ? `<div class="por">${esc(por.filter(Boolean).join(' · '))}</div>` : ''}<div class="st">`);
+function renderCombo(main) {
+  const qs = norm(st.q).split(/\s+/).filter(Boolean);
+  const lista = ITEMS.filter(i => !qs.length || qs.every(w => texto(i).includes(w))).sort((a, b) => a.art.localeCompare(b.art, 'es') || a.color.localeCompare(b.color, 'es'));
+  let sel = ITEMS.find(i => i.sku === st.combo);
+  // Sin selección: el más vendido del último mes entre los visibles
+  if (!sel || (qs.length && !lista.includes(sel))) sel = lista.filter(i => i.stock > 0).sort((a, b) => (b.ventas ? b.ventas[ULT] : 0) - (a.ventas ? a.ventas[ULT] : 0))[0] || lista[0];
+  document.getElementById('stats').innerHTML = `<span>Elegí un producto para ver con qué combinarlo o por qué reemplazarlo</span>`;
+  if (!sel) return vacio(main, 'No hay productos con esa búsqueda.');
+  st.combo = sel.sku;
+  const s = sugerencias(sel), t = sel.tec || {};
+  const sec = (tit, txt, arr) => `<div class="sug"><h3>${tit} <small style="color:var(--muted);font-weight:400">(${arr.length})</small></h3><p class="intro">${txt}</p>${arr.length ? `<div class="grid">${arr.map(cardSug).join('')}</div>` : '<p class="est">No hay opciones con stock.</p>'}</div>`;
+  main.innerHTML = `<div class="dos"><div class="lista">${lista.slice(0, 400).map(i => `<button class="${i === sel ? 'on' : ''}" data-combo="${esc(i.sku)}">${swatch(i.color)}<span>${esc(i.art)} · ${esc(i.color || '—')}</span><small>${fmt(i.stock)} m</small></button>`).join('')}
+      ${lista.length > 400 ? `<p class="intro" style="padding:8px">Se muestran 400 de ${lista.length}. Usá el buscador para acotar.</p>` : ''}</div>
+    <div>
+      <div class="sel"><div class="ph" data-i="${ITEMS.indexOf(sel)}">${foto(sel)}</div><div>
+        <h2>${esc(sel.art)} · ${esc(sel.color || '—')}</h2>
+        <div class="sub">${esc(lindoV(t.textura || ''))} · ${esc(lindoV(sel.menu))} · stock <b>${fmt(sel.stock)} m</b></div>
+        <div class="tags">${t.espesor ? `<span class="tag">Espesor ${esc(t.espesor)}</span>` : ''}${t.ancho ? `<span class="tag">Ancho ${esc(t.ancho)}</span>` : ''}${(t.aptos || []).map(x => `<span class="tag">${esc(aptoTxt(x))}</span>`).join('')}</div>
+      </div></div>
+      ${sec('Otros colores del mismo material', 'Variantes de ' + esc(sel.art) + ' con stock, de mayor a menor.', s.colores)}
+      ${sec('Similares por color', 'Otros materiales en ' + esc(lindoV(colorBase(sel))) + ' con stock: sirven para combinar texturas en un mismo producto.', s.porColor)}
+      ${sec('Similares por textura', 'Otros artículos de la textura ' + esc(lindoV(t.textura || '—')) + ', priorizando el mismo color y un espesor parecido.', s.porTextura)}
+      ${sec('Reemplazos: materiales similares en uso y textura', 'Ordenados por parecido: textura, tipo de material, aptos en común, espesor y color.', s.reemplazos)}
+    </div></div>`;
+  const on = main.querySelector('.lista .on'); if (on) on.scrollIntoView({ block: 'nearest' });
+}
+
+// Ficha de detalle
+let actual = null;
+function abrir(it) {
+  actual = it;
+  const f = ficha(it), hermanos = ITEMS.filter(i => artKey(i) === artKey(it));
+  const k = (l, v) => `<div class="kpi"><small>${l}</small><b>${v}</b></div>`;
+  const notaFoto = it.imgTipo === 'aprox' ? 'La web no tiene foto de este color: se muestra otro color del mismo artículo como referencia.'
+    : it.imgTipo === 'catalogo' ? 'Foto recortada del catálogo digital Primavera / Verano 2027 (no está en la web).'
+    : it.imgTipo === 'sin' ? `Sin foto en la web. Guardá una imagen como <code>${esc(it.img)}</code> y aparecerá acá.` : '';
+  const w = it.web;
+  document.getElementById('det').innerHTML = `
+    <div class="dh"><div><div class="crumb">${esc(it.cat)} · ${esc(FAM[it.fam]?.familia || '')}</div></div>
+      <div style="display:flex;gap:8px">${botonFicha(it)}<button class="btn" id="vercombo" title="Ver con qué combinarlo y por qué reemplazarlo">Combinaciones</button><button class="btn" id="prev">←</button><button class="btn" id="next">→</button><button class="btn" id="close">Cerrar ✕</button></div></div>
+    <div class="db">
+      <div>
+        <div class="big">${foto(it)}</div>
+        ${notaFoto ? `<div class="note">${notaFoto}</div>` : ''}
+        <div class="colors">${hermanos.map(h => `<button class="${h === it ? 'on' : ''}" data-i="${ITEMS.indexOf(h)}" title="${esc(h.color)} · ${fmt(h.stock)} m">${h.imgTipo === 'sin' ? `<div class="sw">—</div>` : `<img loading="lazy" src="${esc(encodeURI(h.img))}" alt="">`}<span>${esc(h.color || '—')}</span></button>`).join('')}</div>
+        <p class="hint">${hermanos.length} variante${hermanos.length > 1 ? 's' : ''} de color · stock total del artículo: <b>${fmt(hermanos.reduce((a, h) => a + h.stock, 0))} m</b></p>
+      </div>
+      <div>
+        <h2 class="t">${esc(it.art)}</h2>
+        <div class="sub">${esc(it.color || '—')} · <span style="font-family:ui-monospace,Consolas,monospace">${esc(it.sku)}</span> ${it.senal ? `<span class="pill ${sigClass(it.senal)}">${esc(it.senal)}</span>` : ''}</div>
+        <div class="kpis">
+          ${k('Stock', fmt(it.stock) + ' m')}${k('En tránsito', fmt(it.transito) + ' m')}${k('Pedidos sin facturar', fmt(it.pedidos) + ' m')}
+          ${k('Disponible total', fmt(it.total) + ' m')}${k('Venta prom./mes', fmt(it.venta) + ' m')}${k('Cobertura', it.cobertura != null ? it.cobertura + ' meses' : '—')}
+        </div>
+        ${it.analisis ? `<div class="ana">${esc(it.analisis)}</div>` : ''}
+        ${(a => a ? `<div class="web"><b>Ficha técnica</b> · ${esc(lindoV(a.tec.textura || ''))} ${rotPill(a)}
+          <div style="margin-top:6px">Ancho: ${esc(a.tec.ancho || '—')} · Espesor: ${esc(a.tec.espesor || '—')} · Revés: ${esc(a.tec.reves || '—')} · Composición: ${esc(a.tec.composicion || '—')}</div>
+          <div style="margin-top:4px">Aptos: ${esc((a.tec.aptos || []).map(aptoTxt).join(', ') || '—')}${a.tec.aptosFuente && a.tec.aptosFuente !== 'catálogo' ? ' (estimado)' : ''}</div>
+          <div style="margin-top:4px">Ideal para: ${esc(ideal(a).join(', ') || '—')}</div></div>` : '')(ART[artKey(it)])}
+        ${w ? `<div class="web"><b>Ficha en saxs.com.ar</b> · <a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.nombre)}</a>${w.precio ? ` · $${fmt(w.precio)} /m` : ''}
+          ${w.texto ? `<div style="margin-top:6px">${esc(w.texto)}</div>` : ''}
+          ${w.detalles.length ? `<ul>${w.detalles.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}</div>` : ''}
+        <p class="hint">Estos campos son del <b>artículo</b> (aplican a todos sus colores). Se guardan solos en este navegador; usá <b>Guardar fichas</b> para tener el archivo de respaldo. ${f._editado ? '<span class="edited">● editada</span>' : ''}</p>
+        ${CAMPOS.map(([key, lab, rows]) => `<div class="fld"><label>${lab}</label><textarea data-k="${key}" rows="${rows}">${esc(f[key])}</textarea></div>`).join('')}
+        <button class="btn" id="reset">Volver a la ficha sugerida</button>
+      </div>
+    </div>`;
+  document.getElementById('ov').classList.add('open');
+  document.getElementById('det').classList.add('open');
+}
+function cerrar() { document.getElementById('ov').classList.remove('open'); document.getElementById('det').classList.remove('open'); actual = null; render(); }
+function mover(d) {
+  // Recorre lo que se ve en pantalla en cualquier vista (cards, filas del listado, fichas de detalle)
+  const vis = [...document.querySelectorAll('#main .card, #main tr[data-i], #main .tec[data-i]')].map(c => c.dataset.i ? ITEMS[+c.dataset.i] : ITEMS.find(i => i.sku === c.dataset.sku));
+  const pos = vis.findIndex(i => i && (i === actual || (st.modo === 'detalle' && artKey(i) === artKey(actual))));
+  const nx = vis[pos + d]; if (nx) abrir(nx);
+}
+
+document.getElementById('det').addEventListener('input', e => {
+  const k = e.target.dataset.k; if (!k || !actual) return;
+  const key = artKey(actual), f = ficha(actual);
+  ENR[key] = Object.assign({}, ...CAMPOS.map(([c]) => ({ [c]: f[c] })), ENR[key] || {}, { [k]: e.target.value, art: actual.art, t: Date.now() });
+  persist();
+});
+document.getElementById('det').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.selfi) { elegir([b.dataset.selfi], !SEL_SET.has(b.dataset.selfi)); return; }
+  if (b.id === 'vercombo') { st.combo = actual.sku; st.vista = 'combo'; saveView(); cerrar(); window.scrollTo(0, 0); }
+  else if (b.id === 'close') cerrar();
+  else if (b.id === 'prev') mover(-1);
+  else if (b.id === 'next') mover(1);
+  else if (b.id === 'reset') { if (confirm('¿Descartar lo escrito para este artículo y volver a la ficha sugerida?')) { delete ENR[artKey(actual)]; persist(); abrir(actual); } }
+  else if (b.dataset.i) abrir(ITEMS[+b.dataset.i]);
+});
+document.getElementById('ov').onclick = cerrar;
+document.addEventListener('keydown', e => {
+  if (!actual) return;
+  if (e.key === 'Escape') cerrar();
+  if (e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight') mover(1);
+  if (e.key === 'ArrowLeft') mover(-1);
+});
+document.getElementById('main').addEventListener('click', e => {
+  // La casilla de selección no abre la ficha
+  if (e.target.closest('.selbox, .selcol')) return;
+  const h = e.target.closest('th[data-lcol]');
+  if (h) { const k = h.dataset.lcol; st.lcol = st.lcol && st.lcol.k === k ? { k, inv: !st.lcol.inv } : { k, inv: false }; saveView(); render(); return; }
+  const c = e.target.closest('.card, [data-i]'); if (!c) return;
+  abrir(c.dataset.i ? ITEMS[+c.dataset.i] : ITEMS.find(i => i.sku === c.dataset.sku));
+});
+// Casillas de los paneles de filtros (en la página y en el panel izquierdo): grupo entero o valor suelto
+function cambiaFaceta(t) {
+  const v = t.dataset.facg || t.dataset.fac; if (!v) return false;
+  const sel = st[v + 'F'], k = t.dataset.k;
+  if (t.dataset.facg) { const vs = JSON.parse(t.dataset.vals); sel[k] = t.checked ? [...new Set([...(sel[k] || []), ...vs])] : (sel[k] || []).filter(x => !vs.includes(x)); }
+  else sel[k] = t.checked ? [...(sel[k] || []), t.value] : (sel[k] || []).filter(x => x !== t.value);
+  saveView(); render(); return true;
+}
+document.getElementById('main').addEventListener('change', e => {
+  if (cambiaFaceta(e.target)) return;
+  const f = e.target.dataset.f; if (!f) return;
+  st[f] = f === 'mes' ? +e.target.value : e.target.value; saveView(); render();
+});
+// Botones propios de las vistas: tipos de saldo, quitar filtros, elegir producto, "Ideal para…"
+document.getElementById('main').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.abre) { abiertos.has(b.dataset.abre) ? abiertos.delete(b.dataset.abre) : abiertos.add(b.dataset.abre); render(); }
+  else if (b.dataset.limpia) { st[b.dataset.limpia + 'F'] = {}; saveView(); render(); }
+  else if (b.dataset.combo) { st.combo = b.dataset.combo; saveView(); render(); }
+  else if (b.dataset.quita) setIdeal(b.dataset.quita, ideal(ART[b.dataset.quita]).filter(x => x !== b.dataset.v));
+  else if (b.dataset.add) {
+    const inp = document.querySelector(`input[data-addin="${CSS.escape(b.dataset.add)}"]`);
+    if (inp && inp.value.trim()) setIdeal(b.dataset.add, [...ideal(ART[b.dataset.add]), inp.value]);
+  }
+});
+document.getElementById('main').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.dataset.addin && e.target.value.trim()) setIdeal(e.target.dataset.addin, [...ideal(ART[e.target.dataset.addin]), e.target.value]);
+});
+document.getElementById('tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-vista]'); if (!b) return;
+  st.vista = b.dataset.vista;
+  usaPanel(st.vista);
+  saveView(); render(); window.scrollTo(0, 0);
+});
+window.addEventListener('resize', () => document.documentElement.style.setProperty('--hh', document.querySelector('header').offsetHeight + 'px'));
+// Tooltip de las barras de ventas
+const tip = document.getElementById('tip');
+document.getElementById('main').addEventListener('mousemove', e => {
+  const r = e.target.closest('[data-tip]');
+  if (!r) { tip.style.display = 'none'; return; }
+  const [art, color, mts, pct, prom, stock] = JSON.parse(r.dataset.tip);
+  tip.innerHTML = `<b>${esc(art)}</b> · ${esc(color)}<br><b>${fmt(mts)} m</b> vendidos en ${esc(MESES[st.mes])}<div>${pct} % de lo vendido del artículo</div><div>Promedio ${esc(MESES[0])}–${esc(MESES[MESES.length - 1])}: ${fmt(prom)} m/mes</div><div>Stock actual: ${fmt(stock)} m</div>`;
+  tip.style.display = 'block';
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = e.clientY + 14 + tip.offsetHeight > innerHeight ? e.clientY - tip.offsetHeight - 10 : e.clientY + 14;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+});
+document.getElementById('main').addEventListener('mouseleave', () => tip.style.display = 'none');
+document.getElementById('side').addEventListener('click', e => {
+  const ab = e.target.closest('[data-abrecat]');
+  if (ab) { const c = ab.dataset.abrecat; abiertosCat.has(c) ? abiertosCat.delete(c) : abiertosCat.add(c); filtros(); return; }
+  const fb = e.target.closest('[data-abre], [data-limpia]');
+  if (fb) {
+    if (fb.dataset.abre) abiertos.has(fb.dataset.abre) ? abiertos.delete(fb.dataset.abre) : abiertos.add(fb.dataset.abre);
+    else st[fb.dataset.limpia + 'F'] = {};
+    saveView(); render(); return;
+  }
+  const b = e.target.closest('.f'); if (!b) return;
+  st[b.dataset.g] = st[b.dataset.g] === b.dataset.v ? '' : b.dataset.v; saveView(); render(); window.scrollTo(0, 0);
+});
+// Categoría: marcarla = toda la categoría (y despliega sus subcategorías); marcar subcategorías la acota
+document.getElementById('side').addEventListener('change', e => {
+  const t = e.target;
+  if (cambiaFaceta(t)) return;
+  if (t.name === 'modo') { st.modo = t.value; saveView(); render(); return; }
+  if (t.name === 'disp') { st.disp = t.value; saveView(); render(); return; }
+  if (t.dataset.cat === '*') st.cats = {};
+  else if (t.dataset.cat) {
+    const c = t.dataset.cat;
+    if (t.checked) { st.cats[c] = []; abiertosCat.add(c); } else { delete st.cats[c]; abiertosCat.delete(c); }
+  } else if (t.dataset.sub) {
+    const [c, s] = t.dataset.sub.split('|'), sel = st.cats[c] || [];
+    st.cats[c] = t.checked ? [...new Set([...sel, s])] : sel.filter(x => x !== s);
+  } else return;
+  saveView(); render(); window.scrollTo(0, 0);
+});
+document.getElementById('onlyEdited').onchange = e => { st.onlyEdited = e.target.checked; saveView(); render(); };
+// Graduar stock: desde/hasta a mano (con una pausa al tipear) o con los atajos
+let gh;
+for (const k of ['gmin', 'gmax']) document.getElementById(k).oninput = e => { clearTimeout(gh); gh = setTimeout(() => { const v = e.target.value.trim(); st[k] = v === '' || isNaN(+v) ? null : Math.max(0, +v); saveView(); render(); }, 350); };
+document.getElementById('gsobre').onchange = e => { st.gsobre = e.target.value; saveView(); render(); };
+document.getElementById('grad').addEventListener('click', e => {
+  const b = e.target.closest('[data-grad]'); if (!b) return;
+  const [a, z] = b.dataset.grad.split('|').map(x => x === '' ? null : +x);
+  const igual = st.gmin === a && st.gmax === z;
+  st.gmin = igual ? null : a; st.gmax = igual ? null : z; saveView(); render();
+});
+document.getElementById('sort').onchange = e => { st.sort = e.target.value; st.lcol = null; saveView(); render(); };
+let qh; document.getElementById('q').oninput = e => { clearTimeout(qh); qh = setTimeout(() => { st.q = e.target.value; render(); }, 150); };
+document.getElementById('menuBtn').onclick = () => document.getElementById('side').classList.toggle('open');
+
+function bajar(nombre, contenido, tipo) {
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([contenido], { type: tipo })), download: nombre });
+  document.body.append(a); a.click(); a.remove();
+}
+document.getElementById('save').onclick = () => {
+  bajar('enriquecimiento.js', '// Fichas enriquecidas guardadas desde la app (botón "Guardar fichas"). Reemplazá este archivo con el que descargues.\nwindow.SAXS_ENRIQ = ' + JSON.stringify(ENR, null, 1) + ';\n', 'text/javascript');
+  toast(`${Object.keys(ENR).length} fichas guardadas · reemplazá enriquecimiento.js en la carpeta`);
+};
+document.getElementById('csv').onclick = () => {
+  const cols = ['SKU', 'Categoría web', 'Tipo', 'Artículo', 'Color', 'Stock', 'En tránsito', 'Pedidos', 'Disponible total', 'Venta prom/mes', 'Cobertura', 'Señal', ...MESES.map(m => 'Venta ' + m), ...CAMPOS.map(c => c[1]), 'Imagen', 'Web'];
+  const lista = st.vista === 'ventas' ? ITEMS.filter(i => i.ventas && i.ventas[st.mes] > 0 && (!st.vcat || i.menu === st.vcat)).sort((a, b) => b.ventas[st.mes] - a.ventas[st.mes]) : filtrados().sort(orden);
+  const rows = lista.map(i => { const f = ficha(i); return [i.sku, i.menu, i.cat, i.art, i.color, i.stock, i.transito, i.pedidos, i.total, i.venta, i.cobertura ?? '', i.senal, ...MESES.map((m, k) => i.ventas ? i.ventas[k] : ''), ...CAMPOS.map(c => f[c[0]]), i.img, i.web ? i.web.url : '']; });
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  bajar('saxs-stock.csv', '﻿' + [cols, ...rows].map(r => r.map(q).join(';')).join('\r\n'), 'text/csv');
+};
+
+// --- Selección de productos: casilla en cada card / fila, panel "Selección" y descarga a Excel ---
+// Se guarda en este navegador, en el orden en que se fueron eligiendo.
+const LS_SEL = 'saxs-seleccion';
+let SEL = [];
+try { SEL = JSON.parse(localStorage.getItem(LS_SEL) || '[]').filter(s => ITEMS.some(i => i.sku === s)); } catch (e) {}
+var SEL_SET = new Set(SEL);
+if (!['lista', 'tarjetas', 'tabla'].includes(st.selVista)) st.selVista = 'lista';
+const ORDEN_SEL = [
+  ['sel', 'Orden en que los elegí', null],
+  ['alfa', 'Alfabético', (a, b) => a.art.localeCompare(b.art, 'es') || a.color.localeCompare(b.color, 'es')],
+  ['cat', 'Por categoría web', (a, b) => CATS.indexOf(a.menu) - CATS.indexOf(b.menu) || a.art.localeCompare(b.art, 'es') || a.color.localeCompare(b.color, 'es')],
+  ['precioDesc', 'De mayor a menor precio', (a, b) => conNulo(precio(a), precio(b), (x, y) => y - x)],
+  ['precioAsc', 'De menor a mayor precio', (a, b) => conNulo(precio(a), precio(b), (x, y) => x - y)],
+  ['stockDesc', 'Mayor stock', (a, b) => b.stock - a.stock],
+  ['stockAsc', 'Menor stock', (a, b) => a.stock - b.stock],
+  ['pedDesc', 'Mayor stock + pedidos', (a, b) => (b.stock + pedidosHechos(b)) - (a.stock + pedidosHechos(a))],
+  ['venta', 'Mayor venta en el último mes', (a, b) => ventaMes(b) - ventaMes(a)]
+];
+if (!ORDEN_SEL.some(o => o[0] === st.selOrden)) st.selOrden = 'sel';
+const guardaSel = () => { SEL_SET = new Set(SEL); try { localStorage.setItem(LS_SEL, JSON.stringify(SEL)); } catch (e) {} };
+function seleccionados() {
+  const its = SEL.map(s => ITEMS.find(i => i.sku === s)).filter(Boolean), o = ORDEN_SEL.find(x => x[0] === st.selOrden);
+  return o && o[2] ? its.slice().sort((a, b) => o[2](a, b) || SEL.indexOf(a.sku) - SEL.indexOf(b.sku)) : its;
+}
+// Marca o desmarca sin redibujar la página (no se pierde la posición)
+function elegir(skus, on) {
+  for (const s of skus) {
+    if (on && !SEL_SET.has(s)) SEL.push(s);
+    if (!on) SEL = SEL.filter(x => x !== s);
+    guardaSel();
+    document.querySelectorAll(`input[data-sel="${CSS.escape(s)}"]`).forEach(cb => {
+      cb.checked = on;
+      const c = cb.closest('.card, tr'); if (c) c.classList.toggle('elegida', on);
+    });
+  }
+  document.querySelectorAll('input[data-selall]').forEach(cb => cb.checked = cb.dataset.selall.split('|').every(s => SEL_SET.has(s)));
+  pintaSelBtn();
+  if (document.getElementById('selp').classList.contains('open')) renderSel();
+  if (actual) { const b = document.getElementById('selfi'); if (b) b.outerHTML = botonFicha(actual); }
+}
+function pintaSelBtn() {
+  document.getElementById('selN').textContent = SEL.length;
+  document.getElementById('selBtn').classList.toggle('con', SEL.length > 0);
+}
+const botonFicha = it => `<button class="btn ${SEL_SET.has(it.sku) ? 'primary' : ''}" id="selfi" data-selfi="${esc(it.sku)}">${SEL_SET.has(it.sku) ? '✓ Seleccionado' : 'Seleccionar'}</button>`;
+
+// Panel Selección: vistas Lista / Tarjetas / Tabla, orden y descarga
+function renderSel() {
+  const its = seleccionados(), p = document.getElementById('selp');
+  const mini = i => i.imgTipo !== 'sin' ? `<img loading="lazy" src="${esc(encodeURI(i.img))}" alt="">` : '<div class="mini-img"></div>';
+  const tot = its.reduce((a, i) => a + i.stock, 0);
+  let cuerpo;
+  if (!its.length) cuerpo = '<div class="empty">Todavía no elegiste productos.<br>Marcá la casilla de arriba a la izquierda de cada tarjeta (o de cada fila en el Listado).</div>';
+  else if (st.selVista === 'tarjetas') cuerpo = `<div class="sl-grid">${its.map((i, k) => `<div class="sl-card"><span class="num">${k + 1}</span><button class="quita" data-quitasel="${esc(i.sku)}" title="Quitar de la selección">×</button>
+      <div class="ph" data-abresel="${ITEMS.indexOf(i)}">${foto(i)}</div><div class="bd"><b>${esc(i.art)}</b><small>${esc(i.color || '—')}</small><small>${fmt(i.stock)} m · ${precioTxt(i)}</small></div></div>`).join('')}</div>`;
+  else if (st.selVista === 'tabla') cuerpo = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>#</th><th>Artículo</th><th>Color</th><th>SKU</th><th>Categoría</th><th class="n">Precio</th><th class="n">Stock</th><th class="n">Pedidos</th><th class="n">Venta ${esc(MESES[ULT] || '')}</th><th>Señal</th><th></th></tr></thead><tbody>
+      ${its.map((i, k) => `<tr><td class="n">${k + 1}</td><td><b data-abresel="${ITEMS.indexOf(i)}" style="cursor:pointer">${esc(i.art)}</b></td><td>${swatch(i.color)}${esc(i.color || '—')}</td><td style="font-family:ui-monospace,Consolas,monospace;font-size:12px">${esc(i.sku)}</td><td>${esc(lindoV(i.menu))}</td>
+        <td class="n">${precioTxt(i)}</td><td class="n">${fmt(i.stock)} m</td><td class="n">${fmt(pedidosHechos(i))} m</td><td class="n">${fmt(ventaMes(i))} m</td><td>${i.senal ? `<span class="pill ${sigClass(i.senal)}">${esc(i.senal)}</span>` : ''}</td>
+        <td><button class="quita" data-quitasel="${esc(i.sku)}" title="Quitar">×</button></td></tr>`).join('')}</tbody></table></div>`;
+  else cuerpo = its.map((i, k) => `<div class="sl-row"><span class="n">${k + 1}</span>${mini(i)}<div class="t" data-abresel="${ITEMS.indexOf(i)}"><b>${esc(i.art)}</b> · ${esc(i.color || '—')}<small>${esc(i.sku)} · ${esc(lindoV(i.menu))}${(i.sub || []).length ? ' › ' + esc(i.sub.join(', ')) : ''}</small></div>
+      <div class="v">${precioTxt(i)}<small>precio web</small></div><div class="v">${fmt(i.stock)} m<small>${pedidosHechos(i) ? '+ ' + fmt(pedidosHechos(i)) + ' m pedidos' : 'stock'}</small></div>
+      <button class="quita" data-quitasel="${esc(i.sku)}" title="Quitar de la selección">×</button></div>`).join('');
+  p.innerHTML = `<div class="sh">
+      <h2>Selección <small>${fmt(its.length)} producto${its.length === 1 ? '' : 's'} · ${fmt(tot)} m en stock</small><button class="btn" data-cierrasel>Cerrar ✕</button></h2>
+      <div class="bar" style="margin:0">
+        <label>Vista<select data-selvista>${[['lista', 'Lista'], ['tarjetas', 'Tarjetas'], ['tabla', 'Tabla']].map(([v, t]) => `<option value="${v}" ${st.selVista === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+        <label>Ordenar<select data-selorden>${ORDEN_SEL.map(([v, t]) => `<option value="${v}" ${st.selOrden === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      </div>
+      <div class="acciones"><button class="btn" data-vaciasel ${its.length ? '' : 'disabled'}>Vaciar selección</button><button class="btn primary" data-bajasel ${its.length ? '' : 'disabled'}>Descargar Excel</button></div>
+    </div><div class="sb">${cuerpo}</div>`;
+}
+function abreSel() { renderSel(); document.getElementById('selp').classList.add('open'); document.getElementById('ov').classList.add('open'); }
+function cierraSel() { document.getElementById('selp').classList.remove('open'); if (!actual) document.getElementById('ov').classList.remove('open'); }
+
+// Excel (.xlsx) armado acá mismo: un libro con una hoja, encabezado fijo, filtros y formatos de número
+const COLS_XLS = [
+  ['N°', (i, k) => k + 1, 'n', 5], ['SKU', i => i.sku, 's', 14], ['Artículo', i => i.art, 's', 26], ['Color', i => i.color, 's', 20],
+  ['Categoría web', i => lindoV(i.menu), 's', 18], ['Subcategoría', i => (i.sub || []).join(', '), 's', 18], ['Tipo (Excel)', i => i.cat, 's', 18],
+  ['Textura', i => lindoV((i.tec || {}).textura || ''), 's', 16], ['Precio web', precio, '$', 12], ['Stock (m)', i => i.stock, 'n', 11],
+  ['En tránsito (m)', i => i.transito, 'n', 13], ['Pedidos sin facturar (m)', i => i.pedidos, 'n', 13], ['Stock + pedidos (m)', i => i.stock + pedidosHechos(i), 'n', 14],
+  ['Disponible total (m)', i => i.total, 'n', 14], [`Venta ${MESES[ULT] || 'último mes'} (m)`, ventaMes, 'n', 14], ['Venta prom./mes (m)', i => i.venta, 'n', 13],
+  ['Cobertura (meses)', i => i.cobertura, 'd', 11], ['Señal de compra', i => i.senal, 's', 16], ['Análisis de compra', i => i.analisis, 's', 40],
+  ['Ancho', i => (i.tec || {}).ancho, 's', 10], ['Espesor', i => (i.tec || {}).espesor, 's', 10], ['Aptos', i => ((i.tec || {}).aptos || []).map(aptoTxt).join(', '), 's', 30],
+  ['Página web', i => i.web ? i.web.url : '', 's', 40]
+];
+function xlsx(nombreHoja, filas, anchos, tipos) {
+  const xe = s => String(s ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const col = n => { let s = ''; for (n++; n; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + (n - 1) % 26) + s; return s; };
+  const estilo = { n: 2, $: 3, d: 4 };
+  const filasXml = filas.map((f, r) => `<row r="${r + 1}">${f.map((v, c) => {
+    const ref = col(c) + (r + 1);
+    if (r === 0) return `<c r="${ref}" t="inlineStr" s="1"><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
+    if (v == null || v === '') return '';
+    if (typeof v === 'number' && isFinite(v)) return `<c r="${ref}" s="${estilo[tipos[c]] || 0}"><v>${v}</v></c>`;
+    return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
+  }).join('')}</row>`).join('');
+  const ult = col(filas[0].length - 1) + filas.length;
+  const archivos = {
+    '[Content_Types].xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+    '_rels/.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+    'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xe(nombreHoja)}" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'${xe(nombreHoja)}'!$A$1:$${col(filas[0].length - 1)}$${filas.length}</definedName></definedNames></workbook>`,
+    'xl/_rels/workbook.xml.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
+    'xl/styles.xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="164" formatCode="&quot;$&quot;#,##0"/><numFmt numFmtId="165" formatCode="0.0"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEAF0FF"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
+    'xl/worksheets/sheet1.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${anchos.map((w, c) => `<col min="${c + 1}" max="${c + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${filasXml}</sheetData><autoFilter ref="A1:${ult}"/></worksheet>`
+  };
+  return zip(archivos);
+}
+// ZIP sin compresión (lo que necesita un .xlsx)
+function zip(archivos) {
+  const enc = new TextEncoder(), crcT = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; crcT[n] = c >>> 0; }
+  const crc = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = crcT[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  const d = new Date(), hora = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), dia = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const partes = [], central = []; let off = 0;
+  for (const [nombre, texto] of Object.entries(archivos)) {
+    const n = enc.encode(nombre), datos = enc.encode(texto), c = crc(datos);
+    const h = new DataView(new ArrayBuffer(30));
+    [[0, 0x04034b50, 4], [4, 20, 2], [6, 0x0800, 2], [8, 0, 2], [10, hora, 2], [12, dia, 2], [14, c, 4], [18, datos.length, 4], [22, datos.length, 4], [26, n.length, 2], [28, 0, 2]].forEach(([p, v, t]) => t === 4 ? h.setUint32(p, v, true) : h.setUint16(p, v, true));
+    const cd = new DataView(new ArrayBuffer(46));
+    [[0, 0x02014b50, 4], [4, 20, 2], [6, 20, 2], [8, 0x0800, 2], [10, 0, 2], [12, hora, 2], [14, dia, 2], [16, c, 4], [20, datos.length, 4], [24, datos.length, 4], [28, n.length, 2], [30, 0, 2], [32, 0, 2], [34, 0, 2], [36, 0, 2], [38, 0, 4], [42, off, 4]].forEach(([p, v, t]) => t === 4 ? cd.setUint32(p, v, true) : cd.setUint16(p, v, true));
+    partes.push(new Uint8Array(h.buffer), n, datos); central.push(new Uint8Array(cd.buffer), n);
+    off += 30 + n.length + datos.length;
+  }
+  const tam = central.reduce((a, b) => a + b.length, 0), fin = new DataView(new ArrayBuffer(22)), cant = Object.keys(archivos).length;
+  [[0, 0x06054b50, 4], [4, 0, 2], [6, 0, 2], [8, cant, 2], [10, cant, 2], [12, tam, 4], [16, off, 4], [20, 0, 2]].forEach(([p, v, t]) => t === 4 ? fin.setUint32(p, v, true) : fin.setUint16(p, v, true));
+  return new Blob([...partes, ...central, new Uint8Array(fin.buffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function descargaSel() {
+  const its = seleccionados(); if (!its.length) return;
+  const filas = [COLS_XLS.map(c => c[0]), ...its.map((i, k) => COLS_XLS.map(c => { const v = c[1](i, k); return v == null ? '' : v; }))];
+  const blob = xlsx('Selección', filas, COLS_XLS.map(c => c[3]), COLS_XLS.map(c => c[2]));
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `SAXS selección ${new Date().toLocaleDateString('sv')}.xlsx` });
+  document.body.append(a); a.click(); a.remove();
+  toast(`${its.length} productos descargados en Excel`);
+}
+
+// Eventos de la selección (casillas en cualquier parte de la página y botones del panel)
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.sel) elegir([t.dataset.sel], t.checked);
+  else if (t.dataset.selall) elegir(t.dataset.selall.split('|'), t.checked);
+  else if (t.dataset.selvista != null) { st.selVista = t.value; saveView(); renderSel(); }
+  else if (t.dataset.selorden != null) { st.selOrden = t.value; saveView(); renderSel(); }
+});
+document.getElementById('selBtn').onclick = abreSel;
+document.getElementById('selp').addEventListener('click', e => {
+  const q = e.target.closest('[data-quitasel]'); if (q) return elegir([q.dataset.quitasel], false);
+  if (e.target.closest('[data-cierrasel]')) return cierraSel();
+  if (e.target.closest('[data-vaciasel]')) { if (confirm(`¿Sacar los ${SEL.length} productos de la selección?`)) elegir([...SEL], false); return; }
+  if (e.target.closest('[data-bajasel]')) return descargaSel();
+  const ab = e.target.closest('[data-abresel]'); if (ab) { cierraSel(); abrir(ITEMS[+ab.dataset.abresel]); }
+});
+document.getElementById('ov').addEventListener('click', cierraSel);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('selp').classList.contains('open')) cierraSel(); });
+pintaSelBtn();
+
+render();
+</script>
+</body>
+</html>
